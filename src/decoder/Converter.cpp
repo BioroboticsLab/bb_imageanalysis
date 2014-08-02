@@ -7,7 +7,7 @@
 
 #include "Converter.h"
 #include <iostream>
-#include<string>
+#include <string>
 
 namespace decoder {
 
@@ -19,24 +19,21 @@ Converter::Converter() {
  *
  * @param filename
  */
-cv::Mat Converter::process(const string& filename) {
+Mat Converter::process(const string& filename) {
 
-	cv::Mat image;
+	Mat image;
 
-	if (!this->checkValidFilename(filename)) {
-		throw new std::exception();
-	} else {
 
-		//read file
+
 		image = cv::imread(filename);
 
-		cv::Mat grayImage;
+		Mat grayImage;
 
 		// convert image to grayscale (not needed later because images will already be grayscale)
-		cv::cvtColor(image, grayImage, CV_BGR2GRAY);
+		cvtColor(image, grayImage, CV_BGR2GRAY);
 
 		return grayImage;
-	}
+
 
 }
 
@@ -67,7 +64,8 @@ bool Converter::checkValidFilename(const string& filename) {
 	f.close();
 
 	//check if file has the right extension
-	if (filename.substr(filename.find_last_of(".") + 1) != "png") {
+	if (filename.substr(filename.find_last_of(".") + 1) != "png" ||
+			filename.substr(filename.find_last_of(".") + 1) != "jpeg") {
 		return false;
 	}
 	return true;
