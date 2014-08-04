@@ -12,7 +12,12 @@ using namespace std;
 
 namespace config{
 
-const int DEBUG_MODE = true;
+const int DEBUG_MODE = false;
+
+const string APPlICATION_ENVIROMENT = "development";
+
+
+const string DEFAULT_LOCALIZER_CONFIG = "/Users/mareikeziese/git/bb_imganalysis/src/decoder/localizer.ini";
 
 /******************************************
  *

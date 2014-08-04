@@ -11,6 +11,9 @@
 
 #include <iostream>
 #include <boost/filesystem.hpp>
+#include <ostream>
+#include <boost/iostreams/device/file.hpp>
+#include <boost/iostreams/stream.hpp>
 #include "../src/decoder/Converter.h"
 #include "../src/decoder/Localizer.h"
 #include "../src/decoder/BoundingBox.h"
@@ -29,6 +32,7 @@ using namespace boost::filesystem;
 using namespace std;
 using namespace decoder;
 using namespace cv;
+//namespace io = boost::iostreams;
 
 
 

@@ -16,8 +16,10 @@ using namespace std;
 namespace testconfig {
 const string TEST_ROI_PATH =
 		"/Users/mareikeziese/git/bb_imganalysis/test/data/roi/";
+const string TEST_ROI_CONFIGS_PATH= "/Users/mareikeziese/git/bb_imganalysis/test/data/localizer_configs";
 const string TEST_ROI_RESULT_PATH =
 		"/Users/mareikeziese/git/bb_imganalysis/test/data/roi_result/";
+const bool TEST_ROI_USE_TESTCONFIGS = true;
 const bool TEST_EXPORT_ROI_RESULT_BIGIMAGES = true;
 const bool TEST_EXPORT_ROI_RESULT_SUBIMAGES = false;
 const bool TEST_EXPORT_ROI_SHOW_SUCCESS = true;
