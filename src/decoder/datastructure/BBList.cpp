@@ -7,8 +7,6 @@
 
 #include "BBList.h"
 
-
-
 namespace boost {
 namespace serialization {
 
@@ -23,9 +21,7 @@ void serialize(Archive & ar, cv::Point & p, const unsigned int version) {
 } // namespace serialization
 } // namespace boost
 
-
-
-
+namespace decoder {
 BBList::BBList() {
 	// TODO Auto-generated constructor stub
 
@@ -40,13 +36,13 @@ void BBList::serialize(Archive & ar, const unsigned int version) {
 	ar & points;
 }
 
-
-void BBList::serialize(boost::archive::text_oarchive& ar, const unsigned int version) {
+void BBList::serialize(boost::archive::text_oarchive& ar,
+		const unsigned int version) {
 	ar & points;
 }
 
-
-void BBList::serialize(boost::archive::text_iarchive& ar, const unsigned int version) {
+void BBList::serialize(boost::archive::text_iarchive& ar,
+		const unsigned int version) {
 	ar & points;
 }
 void BBList::AddPoint(Point p) {
@@ -59,4 +55,5 @@ int BBList::size() {
 
 Point BBList::getPoint(int position) {
 	return points[position];
+}
 }

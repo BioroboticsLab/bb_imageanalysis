@@ -19,6 +19,7 @@ using namespace cv;
 using namespace std;
 using namespace boost;
 
+namespace decoder {
 class BBList {
 private:
 	std::vector<Point> points;
@@ -38,5 +39,6 @@ public:
 	Point getPoint(int position);
 
 };
+}
 
 #endif /* BBLIST_H */
