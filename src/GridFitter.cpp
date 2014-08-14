@@ -50,7 +50,6 @@ vector<Grid> GridFitter::process() {
 		grids.push_back(Grid(grid.size, grid.angle-15, 0, grid.x, grid.y, grid.ell, true, scoringMethod));
 	}
 
-
 	#ifdef DEBUG_SHOW_FITTED_GRID
 	// Show the grids for debug propose
 	for (unsigned int i = 0; i < grids.size(); i++) {
@@ -271,4 +270,45 @@ Grid GridFitter::getBestGrid(vector<Grid> grids) {
 	}
 
 	return best;
+}
+
+int GridFitter::bestGridAngleCorrection(Grid g) {
+
+	// index encoding 30°-step angles ranging from [0,5]
+	int i = 0;
+	Mat &roi = g.ell.transformedImage;
+
+	float mean1c = 0;
+	float mean2c = 0;
+
+	for (int j = 0; j < 6; j++) {
+		Mat mask1 = Mat(roi.rows, roi.cols, roi.type(), Scalar(0));
+		vector< vector <Point> > conts1;
+		conts1.push_back(g.renderGridCell(13, j));
+		drawContours(mask1,conts1,0,Scalar(255),CV_FILLED);
+		Scalar mean1;
+		Scalar std1;
+
+		meanStdDev(roi,mean1,std1,mask1);
+
+		Mat mask2 = Mat(roi.rows, roi.cols, roi.type(), Scalar(0));
+		vector< vector <Point> > conts2;
+		conts2.push_back(g.renderGridCell(14, j));
+		drawContours(mask2,conts2,0,Scalar(255),CV_FILLED);
+		Scalar mean2;
+		Scalar std2;
+
+		meanStdDev(roi,mean2,std2,mask2);
+
+		if (abs(mean1c-mean2c) < abs(mean1[0]-mean2[0])) {
+			mean1c = mean1[0];
+			mean2c = mean2[0];
+			i = j;
+		}
+	}
+
+	// 180-flip if supposed white half circle is darker than supposed black half circle
+	if (mean1c < mean2c) i+=6;
+
+	return (i);
 }

@@ -65,17 +65,16 @@ double Grid::score() {
 }
 
 double Grid::binaryCountScore() {
-	int i = this->bestGridAngleCorrection(); // Get right grid orientation as cell offset (maybe flipping needed)
 
 	Mat &binImg = ell.binarizedImage;
 
-	Mat scores (3, 1, CV_64FC1);
+	Mat scores (15, 1, CV_64FC1);
 	// for each cell calculate its size (cell size) and its mean intensity (means)
-	for (int j = 12; j < 15; j++) {
+	for (int j = 0; j < 15; j++) {
 		Mat mask = Mat(binImg.rows, binImg.cols, binImg.type(), Scalar(0));
 
 		vector< vector <Point> > conts;
-		conts.push_back(renderGridCell(j, i));
+		conts.push_back(renderGridCell(j));
 		drawContours(mask, conts, 0, Scalar(1), CV_FILLED);
 
 		Mat whiteCellPixel = binImg.mul(mask); // just keep the pixel within the cell
@@ -84,15 +83,14 @@ double Grid::binaryCountScore() {
 
 		if (j == 12 || j == 13) {
 			// white inner half circle or white outer border
-			scores.at<double>(14 - j) =  ((double) blackPixelAmount) / ((double) whitePixelAmount);
+			scores.at<double>(j) =  ((double) blackPixelAmount) / ((double) whitePixelAmount);
 		} else if (j == 14) {
 			//supposed black inner half circle
-			scores.at<double>(14 - j) =  ((double) whitePixelAmount) / ((double) blackPixelAmount);
+			scores.at<double>(j) =  ((double) whitePixelAmount) / ((double) blackPixelAmount);
+		} else {
+			scores.at<double>(j) =  ((double) min(whitePixelAmount, blackPixelAmount)) / ((double) max(whitePixelAmount, blackPixelAmount));
 		}
 	}
-
-	//adjust grid orientation
-	angle = angle + i * 30;
 
 	return sum(scores)[0];
 }
@@ -102,7 +100,6 @@ double Grid::fisherScore() {
 	// 41/47 = 89.13% with kind of A scaling
 	// determine best orientation
 	Mat &roi = ell.transformedImage;
-	int i = bestGridAngleCorrection();
 
 	float Sb = 0;
 	float Sw = 0;
@@ -124,7 +121,7 @@ double Grid::fisherScore() {
 	for (int j = 0; j < 15; j++) {
 		Mat mask = Mat(roi.rows, roi.cols, roi.type(), Scalar(0));
 		vector< vector <Point> > conts;
-		conts.push_back(renderGridCell(j, i));
+		conts.push_back(renderGridCell(j));
 		drawContours(mask, conts, 0, Scalar(255), CV_FILLED);
 		masks.push_back(mask);
 
@@ -272,57 +269,12 @@ double Grid::fisherScore() {
 	float blackratio = ((float) countNonZero(matBlack)) / ((float) countNonZero(tagBlack));
 	Sb *= blackratio;
 
-
-	//adjust grid orientation
-	angle = angle + i * 30;
-
 	// use fisher score Sb/Sw
 	return Sb / Sw;
 }
 
 // ======
 
-int Grid::bestGridAngleCorrection() {
-
-	// index encoding 30°-step angles ranging from [0,5]
-	int i = 0;
-	Mat &roi = ell.transformedImage;
-
-	float mean1c = 0;
-	float mean2c = 0;
-
-	for (int j = 0; j < 6; j++) {
-		Mat mask1 = Mat(roi.rows, roi.cols, roi.type(), Scalar(0));
-		vector< vector <Point> > conts1;
-		conts1.push_back(renderGridCell(13, j));
-		drawContours(mask1,conts1,0,Scalar(255),CV_FILLED);
-		Scalar mean1;
-		Scalar std1;
-
-		meanStdDev(roi,mean1,std1,mask1);
-
-		Mat mask2 = Mat(roi.rows, roi.cols, roi.type(), Scalar(0));
-		vector< vector <Point> > conts2;
-		conts2.push_back(renderGridCell(14, j));
-		drawContours(mask2,conts2,0,Scalar(255),CV_FILLED);
-		Scalar mean2;
-		Scalar std2;
-
-		meanStdDev(roi,mean2,std2,mask2);
-
-		if (abs(mean1c-mean2c) < abs(mean1[0]-mean2[0])) {
-			mean1c = mean1[0];
-			mean2c = mean2[0];
-			i = j;
-		}
-	}
-
-	// 180-flip if supposed white half circle is darker than supposed black half circle
-	if (mean1c < mean2c) i+=6;
-
-	return (i);
-
-}
 
 vector<Point> Grid::renderScaledGridCell(unsigned short cell, double scale, int offset) {
 
@@ -521,6 +473,7 @@ float Grid::getMeanAlongLine(int xStart, int yStart, int xEnd, int yEnd, int siz
 
 // ======= DEBUG METHODS ========
 Mat Grid::drawGrid(double scale, bool useBinaryImage) {
+	cout << angle << endl;
 	Mat draw; // Matrix the image will be drawn into
 	Mat &roi = useBinaryImage ? ell.binarizedImage : ell.transformedImage;
 	roi.copyTo(draw);

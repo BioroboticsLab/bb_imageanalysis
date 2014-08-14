@@ -178,14 +178,6 @@ private:
 	void init(float size, float angle, float tilt,  int x,  int y, Ellipse ell, bool permutation, ScoringMethod scoringMethod);
 
 	/**
-	 * Returns a orientation correction for a grid as offset.
-	 *
-	 * @param g the grid
-	 * @return offset in cells
-	 */
-	int bestGridAngleCorrection();
-
-	/**
 	 * returns the mean of the intensities along a line
 	 *
 	 * @param xStart x ordinate of the start

@@ -116,6 +116,14 @@ private:
 	 * @return best grid angle
 	 */
 	Grid fitGridAngle(Ellipse &ellipse, float gsize, double angle, int x, int y);
+
+	/**
+	 * Returns a orientation correction for a grid as offset.
+	 *
+	 * @param g the grid
+	 * @return offset in cells
+	 */
+	int bestGridAngleCorrection(Grid g);
 };
 
 #endif /* GRIDFITTER_H_ */
