@@ -1,4 +1,8 @@
-#include "Supplementary.h"
+/**
+ * serialization methods for necessary structures
+ */
+
+#include "decoder/datastructure/Ellipse.h"
 #include <boost/archive/text_oarchive.hpp>
 #include <boost/archive/text_iarchive.hpp>
 #include <iostream>
@@ -9,68 +13,67 @@
 using namespace cv;
 using namespace std;
 
-// Some functions to serialize some objects, to create test data for grit fitting and tag decoding
 BOOST_SERIALIZATION_SPLIT_FREE(Mat)
 namespace boost {
-  namespace serialization {
+	namespace serialization {
 
-    template <class Archive>
-    void serialize(Archive &ar, Ellipse &ell, const unsigned int version) {
-        ar & ell.vote;
-        ar & ell.cen;
-        ar & ell.angle;
-        ar & ell.axis;
-        ar & ell.transformedImage;
-    }
+		// Ellipses
+		template <class Archive>
+		void serialize(Archive &ar, Ellipse &ell, const unsigned int version) {
+			ar & ell.vote;
+			ar & ell.cen;
+			ar & ell.angle;
+			ar & ell.axis;
+			ar & ell.transformedImage;
+		}
 
-    template <class Archive>
-    void serialize(Archive &ar, Point2i &point, const unsigned int version)
-    {
-        ar & point.x;
-        ar & point.y;
-    }
+		// Point2i (opencv)
+		template <class Archive>
+		void serialize(Archive &ar, Point2i &point, const unsigned int version) {
+			ar & point.x;
+			ar & point.y;
+		}
 
-    template <class Archive>
-    void serialize(Archive &ar, Size &size, const unsigned int version)
-    {
-        ar & size.width;
-        ar & size.height;
-    }
+		// Size (opencv)
+		template <class Archive>
+		void serialize(Archive &ar, Size &size, const unsigned int version) {
+			ar & size.width;
+			ar & size.height;
+		}
 
-// http://cheind.wordpress.com/2011/12/06/serialization-of-cvmat-objects-using-boost/
+		// Mat (opencv)
+		// http://cheind.wordpress.com/2011/12/06/serialization-of-cvmat-objects-using-boost/
 
-    //[>* Serialization support for cv::Mat <]
-    template <class Archive>
-    void save(Archive & ar, const Mat& m, const unsigned int version)
-    {
-      size_t elem_size = m.elemSize();
-      size_t elem_type = m.type();
+		//[>* Serialization support for cv::Mat <]
+		template <class Archive>
+		void save(Archive & ar, const Mat& m, const unsigned int version) {
+			size_t elem_size = m.elemSize();
+			size_t elem_type = m.type();
 
-      ar & m.cols;
-      ar & m.rows;
-      ar & elem_size;
-      ar & elem_type;
+			ar & m.cols;
+			ar & m.rows;
+			ar & elem_size;
+			ar & elem_type;
 
-      const size_t data_size = m.cols * m.rows * elem_size;
-      ar & make_array(m.ptr(), data_size);
-    }
+			const size_t data_size = m.cols * m.rows * elem_size;
+			ar & make_array(m.ptr(), data_size);
+		}
 
-    //[>* Serialization support for cv::Mat <]
-    template <class Archive>
-    void load(Archive & ar, Mat& m, const unsigned int version)
-    {
-      int cols, rows;
-      size_t elem_size, elem_type;
+		//[>* Serialization support for cv::Mat <]
+		template <class Archive>
+		void load(Archive & ar, Mat& m, const unsigned int version) {
+			int cols, rows;
+			size_t elem_size, elem_type;
 
-      ar & cols;
-      ar & rows;
-      ar & elem_size;
-      ar & elem_type;
+			ar & cols;
+			ar & rows;
+			ar & elem_size;
+			ar & elem_type;
 
-      m.create(rows, cols, elem_type);
+			m.create(rows, cols, elem_type);
 
-      size_t data_size = m.cols * m.rows * elem_size;
-      ar & make_array(m.ptr(), data_size);
-    }
-  }
+			size_t data_size = m.cols * m.rows * elem_size;
+			ar & make_array(m.ptr(), data_size);
+		}
+	}
 }
