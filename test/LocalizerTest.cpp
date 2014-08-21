@@ -70,7 +70,7 @@ void excecuteTest(Mat gray_image, path filename, path imagename,
 
 		 localizer = Localizer(configfile);
 	 }
-	vector<BoundingBox> bb = localizer.process(gray_image);
+	TagList taglist= localizer.process(gray_image);
 	if (testconfig::TEST_EXPORT_ROI_RESULT_BIGIMAGES) {
 		notFoundImage = imread(imagename.string());
 		string sobel_image = te_dir_tmp.string() + "/sobel.jpeg";
@@ -84,25 +84,31 @@ void excecuteTest(Mat gray_image, path filename, path imagename,
 
 	vector<int> notFound = vector<int>();
 
+
+
+
 	int rightTags = tags.size();
-	int foundTags = bb.size();
+	int foundTags = taglist.size();
 
 	for (int i = 0; i <= tags.size(); i++) {
-		Point p = tags.getPoint(i);
+		cv::Point p = tags.getPoint(i);
 		bool tagFound = false;
 
-		for (int j = 0; j <= bb.size(); j++) {
-			if (bb[j].isPossibleCenter(p,
+		for (int j = 0; j <= taglist.size(); j++) {
+
+			Tag tag = taglist.getTag(j);
+			BoundingBox bb = tag.getBoundingBox();
+			if (bb.isPossibleCenter(p,
 					testconfig::TEST_EXPORT_ROI_TOLERANCE)) {
 				tagFound = true;
 				if (testconfig::TEST_EXPORT_ROI_RESULT_SUBIMAGES) {
 					string img_name = tmp_success.string() + "/Box"
 							+ to_string(i + 1) + ".jpeg";
-					imwrite(img_name, bb[j].sub_image_orig_);
+					imwrite(img_name, tag.getOrigSubImage());
 				}
 				if (testconfig::TEST_EXPORT_ROI_RESULT_BIGIMAGES
 						&& testconfig::TEST_EXPORT_ROI_SHOW_SUCCESS) {
-					Rect box = bb[j].box_;
+					Rect box = bb.getBox();
 					line(notFoundImage, Point(box.x, box.y),
 							Point(box.x + box.width, box.y), Scalar(0, 255, 0));
 					line(notFoundImage, Point(box.x, box.y),
@@ -119,7 +125,7 @@ void excecuteTest(Mat gray_image, path filename, path imagename,
 							FONT_HERSHEY_COMPLEX_SMALL, 1.5, Scalar(0, 255, 0));
 
 				}
-				bb.erase(bb.begin() + j);
+				taglist.removeTag(j);
 				break;
 			}
 		}
@@ -169,21 +175,22 @@ void excecuteTest(Mat gray_image, path filename, path imagename,
 	}
 	if (testconfig::TEST_EXPORT_ROI_RESULT_SUBIMAGES
 			|| testconfig::TEST_EXPORT_ROI_RESULT_BIGIMAGES) {
-		for (int j = 0; j <= bb.size(); j++) {
+		for (int j = 0; j <= taglist.size(); j++) {
 
+		Rect box = taglist.getTag(j).getBoundingBox().getBox();
 			//generate subimage
 			if (testconfig::TEST_EXPORT_ROI_RESULT_SUBIMAGES) {
 				string img_name_f = tmp_failed.string() + "/"
-						+ to_string(bb[j].box_.x) + "_"
-						+ to_string(bb[j].box_.y) + "__"
-						+ to_string(bb[j].box_.width) + "_"
-						+ to_string(bb[j].box_.height) + ".jpeg";
+						+ to_string(box.x) + "_"
+						+ to_string(box.y) + "__"
+						+ to_string(box.width) + "_"
+						+ to_string(box.height) + ".jpeg";
 
-				imwrite(img_name_f, bb[j].sub_image_orig_);
+				imwrite(img_name_f, taglist.getTag(j).getOrigSubImage());
 			}
 			if (testconfig::TEST_EXPORT_ROI_RESULT_BIGIMAGES
 					&& testconfig::TEST_EXPORT_ROI_SHOW_FAILED) {
-				Rect box = bb[j].box_;
+				Rect box = taglist.getTag(j).getBoundingBox().getBox();
 				line(notFoundImage, Point(box.x, box.y),
 						Point(box.x + box.width, box.y), Scalar(255, 0, 0));
 				line(notFoundImage, Point(box.x, box.y),
@@ -203,7 +210,7 @@ void excecuteTest(Mat gray_image, path filename, path imagename,
 		imwrite(te_dir_tmp.string() + "/results.jpeg", notFoundImage);
 	}
 
-	int matchedTags = foundTags - bb.size();
+	int matchedTags = foundTags - taglist.size();
 	cout << "Ergebnisse fŸr Test " << filename.string() << endl;
 	cout << "	Es wurden " << foundTags << " gefunden" << endl;
 	cout << "	Es wurden " << rightTags << " Tags  per Hand markiert" << endl;
@@ -219,17 +226,17 @@ void excecuteTest(Mat gray_image, path filename, path imagename,
 	 cout << *i << "; ";
 	 cout << "]" << endl;*/
 	;
-	cout << bb.size() << " 		falsch erkannt ("
-			<< to_string(bb.size() * 100 / foundTags)
+	cout << taglist.size() << " 		falsch erkannt ("
+			<< to_string(taglist.size() * 100 / foundTags)
 			<< " % der gefundenen Tags)" << endl;
 
 	out << "Ergebnisse " << filename.stem() <<"," << foundTags
 			<< "," << rightTags
 			<< ","<< matchedTags
 			<< "," << rightTags - matchedTags
-			<< "," <<  bb.size()
+			<< "," <<  taglist.size()
 			<< ","<< to_string(matchedTags * 100 / rightTags)<< "%"
-			<< ","<<  to_string(bb.size() * 100 / foundTags) << "%" <<endl;
+			<< ","<<  to_string(taglist.size() * 100 / foundTags) << "%" <<endl;
 }
 
 void iterateROIFolder(path p, path te_dir, ostream &out_file,

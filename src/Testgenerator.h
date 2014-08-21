@@ -17,7 +17,7 @@
 #include <boost/archive/text_iarchive.hpp>
 #include <fstream>
 #include <boost/serialization/vector.hpp>
-#include "BBList.h"
+#include "decoder/datastructure/BBList.h"
 
 
 using namespace boost::filesystem;

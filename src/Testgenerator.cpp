@@ -22,7 +22,7 @@ Testgenerator::~Testgenerator() {
 
 } /* namespace decoder */
 
-BBList tags;
+decoder::BBList tags;
 path directory;
 string modified_image;
 string tags_file;
@@ -135,7 +135,7 @@ int main(int argc, char** argv)
           return -1;
      }
 
-     tags =BBList();
+     tags= decoder::BBList();
      int response = redrawWindow("My Window", img);
 /*
       //Create a window
