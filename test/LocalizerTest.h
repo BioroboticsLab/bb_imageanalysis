@@ -10,6 +10,7 @@
 
 
 #include <iostream>
+#include <fstream>
 #include <boost/filesystem.hpp>
 #include <ostream>
 #include <boost/iostreams/device/file.hpp>
@@ -23,8 +24,8 @@
 #include <math.h>
 #include <boost/lexical_cast.hpp>
 #include <boost/serialization/vector.hpp>
-#include "../src/decoder/datastructure/BBList.h";
-#include "../src/decoder/datastructure/Tag.h";
+#include "../src/decoder/datastructure/BBList.h"
+#include "../src/decoder/datastructure/Tag.h"
 #include "gtest/gtest.h"
 #include "config.h"
 #include "../src/config.h"
