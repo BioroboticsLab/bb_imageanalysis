@@ -13,6 +13,7 @@
 
 using namespace cv;
 using namespace std;
+using namespace decoder;
 
 BOOST_SERIALIZATION_SPLIT_FREE(Mat)
 namespace boost {

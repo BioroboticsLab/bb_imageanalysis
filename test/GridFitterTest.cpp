@@ -10,6 +10,7 @@
 using namespace boost::filesystem;
 using namespace boost::archive;
 using namespace cv;
+using namespace decoder;
 
 GridFitterTest::GridFitterTest() {
 	// TODO Auto-generated constructor stub
