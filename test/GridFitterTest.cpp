@@ -19,40 +19,57 @@ GridFitterTest::~GridFitterTest() {
 	// TODO Auto-generated destructor stub
 }
 
-// TODO ich brauch noch nutzbare Gridpositionen and Winkel  als vergleich!!! Und ich sollte auch die Ellipsen filtern!!!
 void GridFitterTest::SetUp() {
 
 }
 
 void GridFitterTest::TearDown() {
-	// TODO Free serialized ellipses
+
 }
 
 TEST(GridFitterTest, TestGridPositions) {
-	// TODO Testrahmen: 90% der Grids sollten schon nahe der Position sein, die erwartet wird (abweichung von einigen Pixeln und 0.5 bis Grad im Winkel könnte man ja druchgehen lassen)
-		path full_path("./test/data/grid_fitter_ellipses/");
+	path ellipsesPath ("./test/data/grid_fitter/ellipses/");
+	path gridsPath ("./test/data/grid_fitter/grids/");
 
-		directory_iterator end_iter;
-		for (directory_iterator dir_itr(full_path); dir_itr != end_iter; ++dir_itr) {
-			try {
-				if (is_regular_file(dir_itr->status())) {
-					ifstream file(dir_itr->path().string().c_str());
-					text_iarchive ia(file);
-					vector<Ellipse> ellipses;
-					ia >> ellipses;
-					file.close();
-					for (unsigned int i = 0; i < ellipses.size(); i++) {
-						stringstream ss;
-						ss << dir_itr->path().filename() << " " << i;
-						namedWindow(ss.str());
-						imshow(ss.str(), ellipses[i].transformedImage);
+	directory_iterator endIter;
+	int i = 0;
+	int wrongCount = 0;
+	for (directory_iterator dirItr (ellipsesPath); dirItr != endIter; ++dirItr) {
+		try {
+			if (is_regular_file(dirItr->status())) {
+				ifstream ellipseFile(dirItr->path().string().c_str());
+				text_iarchive ellipseArchive(ellipseFile);
+				vector<Ellipse> ellipses;
+				ellipseArchive >> ellipses;
+				ellipseFile.close();
+				GridFitter fitter (i++, ellipses);
+				vector<Grid> grids = fitter.process();
+
+				path gridFilePath = gridsPath / dirItr->path().filename();
+
+				ifstream gridFile(gridFilePath.string().c_str());
+				text_iarchive gridArchive(gridFile);
+				Grid g;
+				gridArchive >> g;
+
+				bool isRight = false;
+				for (unsigned int j = 0; j < grids.size(); j++) {
+					Grid grid = grids[j];
+					if (abs(grid.x - g.x) <= 5 && abs(grid.y - g.y) <= 5 && abs(grid.angle - g.angle) <= 5) {
+						isRight = true;
+						break;
 					}
-					while (waitKey() != 10);
-					destroyAllWindows();
-		        }
-			}
-			catch (const std::exception & ex) {
-				std::cout << dir_itr->path().filename() << " " << ex.what() << std::endl;
+				}
+
+				if (!isRight) {
+					wrongCount++;
+				}
 			}
 		}
+		catch (const std::exception & ex) {
+			std::cout << dirItr->path().filename() << " " << ex.what() << std::endl;
+		}
+	}
+
+	ASSERT_LE((float) wrongCount / i, 0.2);
 }

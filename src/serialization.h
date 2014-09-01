@@ -3,6 +3,7 @@
  */
 
 #include "decoder/datastructure/Ellipse.h"
+#include "decoder/datastructure/Grid.h"
 #include <boost/archive/text_oarchive.hpp>
 #include <boost/archive/text_iarchive.hpp>
 #include <iostream>
@@ -25,6 +26,20 @@ namespace boost {
 			ar & ell.angle;
 			ar & ell.axis;
 			ar & ell.transformedImage;
+		}
+
+		// Grid
+		template <class Archive>
+		void serialize(Archive &ar, Grid &g, const unsigned int version) {
+			ar & g.size;
+			ar & g.x;
+			ar & g.y;
+			ar & g.angle;
+			ar & g.tilt;
+			ar & g.permutation;
+			ar & g.ell;
+			ar & (g._score.metric);
+			ar & g._score.value;
 		}
 
 		// Point2i (opencv)
