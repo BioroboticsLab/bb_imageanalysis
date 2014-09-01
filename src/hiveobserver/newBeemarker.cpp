@@ -20,11 +20,12 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/serialization/vector.hpp>
-#include "../BBList.h";
+#include "../decoder/datastructure/BBList.h"
 
 using namespace boost::filesystem;
 using namespace std;
 using namespace cv;
+using namespace decoder;
 
 BBList tags;
 path directory;
@@ -251,7 +252,7 @@ int main(int argc, char** argv) {
 //directory = path(EXPORT_PATH+ testname);
 
 	if (is_directory(directory)) {
-		std::cerr << "Ein Test fŸr diese Eingabe besteht bereits" << endl;
+		std::cerr << "Ein Test fï¿½r diese Eingabe besteht bereits" << endl;
 		return 0;
 	}
 	create_directory(directory);
@@ -259,7 +260,7 @@ int main(int argc, char** argv) {
 			directory.string() + "/results.txt");
 	std::ostream out_file(&buf);
 
-	for (int i = 0; i < camera_images.size(); i++) {
+	for (unsigned int i = 0; i < camera_images.size(); i++) {
 		generateCameraResults(i, camera_images[i], directory, &out_file);
 	}
 
