@@ -12,7 +12,8 @@ using namespace std;
 
 namespace config{
 
-const int DEBUG_MODE = false;
+const int DEBUG_MODE_LOCALIZER = false;
+const int DEBUG_MODE_RECOGNIZER = false;
 
 const string APPlICATION_ENVIROMENT = "development";
 
@@ -71,13 +72,6 @@ const int LOCALIZER_MAXTAGSIZE =  250;//CV_PI*54*54;
 const int LOCALIZER_MINTAGSIZE =  100;//CV_PI*54*54;
 
 
-/******************************************
- *
- *  Config Testgenerator
- *
- ******************************************/
-
-const string TEST_DATA_EXPORT_PATH = "/Users/mareikeziese/git/bb_imganalysis/test/data/roi/";
 
 }
 

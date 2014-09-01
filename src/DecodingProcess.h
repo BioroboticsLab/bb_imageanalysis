@@ -20,10 +20,12 @@
 #include "decoder/Localizer.h"
 #include "decoder/Recognizer.h"
 #include "decoder/Transformer.h"
+#include "decoder/datastructure/TagList.h"
 
 
 using namespace std;
 using namespace cv;
+using namespace decoder;
 
 class DecodingProcess {
 public:
