@@ -12,12 +12,14 @@
 #include <iostream>
 #include <boost/lexical_cast.hpp>
 #include "config.h"
+#include "../src/config.h"
 #include <boost/filesystem.hpp>
 #include <boost/archive/text_oarchive.hpp>
 #include <boost/archive/text_iarchive.hpp>
 #include <fstream>
 #include <boost/serialization/vector.hpp>
-#include "../src/decoder/datastructure/BBList.h"
+#include "../src/serialization.h"
+#include "../src/decoder/datastructure/TagList.h"
 #include <boost/program_options.hpp>
 #include <iterator>
 
@@ -35,7 +37,11 @@ string generateLocalizerData(string filename);
 int LocalizerRedrawWindow(string windowName, Mat img);
 void LocalizerMouseCallback(int event, int x, int y, int flags, void* userdata);
 
-string generateRcognizerData(string localizer_testdata_original_image, bool use_test_configs);
+int RecognizerRedrawWindow(string windowName, Mat img);
+void RecognizerMouseCallback(int event, int x, int y, int flags, void* userdata);
+
+
+string generateRecognizerData(string localizer_testdata_original_image, bool use_test_configs);
 
 void exportLocalizerTestResults(TagList found, TagList wrongFound,
 		vector<int> notFound, Mat exportImage, path te_dir_tmp);

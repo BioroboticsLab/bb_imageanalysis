@@ -3,8 +3,11 @@
 using namespace cv;
 using namespace std;
 
+namespace decoder {
+
 Ellipse::Ellipse() {
 	vote = 0;
+	angle = 0;
 }
 
 Ellipse::Ellipse( int vote, Point2i center, Size axis_length, double angle ){
@@ -48,4 +51,6 @@ void Ellipse::setVote( int vote) {
 
 bool Ellipse::operator<(const Ellipse & elli2) const {
 	return (vote < elli2.vote);
+}
+
 }
