@@ -24,13 +24,13 @@ namespace testconfig {
  * @var path, where testdata is placed (generated with the testgenerator)
  */
 const string TEST_ROI_PATH =
-		"/Users/mareikeziese/git/bb_imganalysis/test/data/localizer_testdata/";
+		"/Users/mareikeziese/git/bb_imganalysis/test/testdata/localizer_testdata/";
 
 /**
  * @var path, where the results should be placed in (with ending backslash )
  */
 const string TEST_ROI_RESULT_PATH =
-		"/Users/mareikeziese/git/bb_imganalysis/test/data/localizer_testresult/";
+		"/Users/mareikeziese/git/bb_imganalysis/test/testdata/localizer_testresult/";
 
 /**
  * @var if the test should test with several test-configs, placed in config_folder
@@ -41,7 +41,7 @@ const bool TEST_ROI_USE_TESTCONFIGS = true;
  * @var folder with configs, that the test shall evaluate
  */
 const string TEST_ROI_CONFIGS_PATH =
-		"/Users/mareikeziese/git/bb_imganalysis/test/data/localizer_configs";
+		"/Users/mareikeziese/git/bb_imganalysis/testdata/data/localizer_configs";
 
 /**
  * @var if the test should export a big image, where all results are shown
@@ -83,13 +83,13 @@ const int TEST_EXPORT_ROI_TOLERANCE = 30;
  * @var path, where testdata is placed (generated with the testgenerator)
  */
 const string TEST_RECOGNIZER_PATH =
-		"/Users/mareikeziese/git/bb_imganalysis/test/data/recognizer_testdata/";
+		"/Users/mareikeziese/git/bb_imganalysis/test/testdata/recognizer_testdata/";
 
 /**
  * @var  path, where the results should be placed in (with ending backslash )
  */
 const string TEST_RECOGNIZER_RESULT_PATH =
-		"/Users/mareikeziese/git/bb_imganalysis/test/data/recognizer_testresult/";
+		"/Users/mareikeziese/git/bb_imganalysis/test/testdata/recognizer_testresult/";
 
 /**
  * @var if the test should test with several test-configs, placed in config_folder

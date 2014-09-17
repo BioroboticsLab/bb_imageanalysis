@@ -2,7 +2,6 @@
 /local_Test
 /Release
 /BBGen
-/Data
 /Beecounter
 /test_example
 .cproject
@@ -13,3 +12,5 @@
 /ManualGridFitter/
 /test/config.h
 /testing/
+/Data/
+test/testdata/grid_fitter
