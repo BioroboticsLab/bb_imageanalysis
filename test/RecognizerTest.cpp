@@ -6,38 +6,13 @@
  */
 #include "RecognizerTest.h"
 
-class RecognizerTest: public ::testing::Test {
-
-private:
-public:
-	void SetUp() {
-	}
-
-	/**
-	 * function that is called immediately after a test
-	 */
-	void TearDown() {
-	}
-
-};
-/**
- * loads Point of a prepared test-case
- *
- * @param string filename
- * @return
- */
-BBList loadTags(string filename) {
-
-	std::ifstream ifs(filename);
-	boost::archive::text_iarchive ia(ifs);
-	// read class state from archive
-	BBList tags;
-	ia & tags;
-	return tags;
-
+void RecognizerTest::SetUp() {
 }
 
-void excecuteTest(Mat gray_image, path filename, path imagename,
+void RecognizerTest::TearDown() {
+}
+
+void excecuteRecognizerTest(Mat gray_image, path filename, path imagename,
 		path te_dir_tmp, ostream &out, string configfile = "") {
 
 	path tmp_success, tmp_failed, tmp_notfound;
@@ -45,9 +20,9 @@ void excecuteTest(Mat gray_image, path filename, path imagename,
 	Mat sub_image;
 	Localizer localizer;
 
-	BBList tags = loadTags(filename.string() + "/tags.txt");
+	BBList tags = TestHelpers::loadTags(filename.string() + "/tags.txt");
 
-	if (testconfig::TEST_EXPORT_ROI_RESULT_SUBIMAGES) {
+	if (testconfig::TEST_EXPORT_RECOGNIZER_RESULT_SUBIMAGES) {
 
 		tmp_success = path(te_dir_tmp.string() + "/success");
 		tmp_failed = path(te_dir_tmp.string() + "/failed");
@@ -59,199 +34,200 @@ void excecuteTest(Mat gray_image, path filename, path imagename,
 	}
 
 	Mat notFoundImage;
+	gray_image.copySize(notFoundImage);
 
 	if (configfile.size() == 0) {
 		localizer = Localizer();
 	} else {
 
-		localizer = Localizer(configfile);
-	}
-	TagList taglist = localizer.process(gray_image);
-	if (testconfig::TEST_EXPORT_ROI_RESULT_BIGIMAGES) {
-		notFoundImage = imread(imagename.string());
-		string sobel_image = te_dir_tmp.string() + "/sobel.jpeg";
-		string blob_image = te_dir_tmp.string() + "/blob.jpeg";
-		string canny_image = te_dir_tmp.string() + "/canny.jpeg";
-
-		imwrite(sobel_image, localizer.getSobel());
-		imwrite(blob_image, localizer.getBlob());
-		imwrite(canny_image, localizer.getCannyMap());
+		localizer = Localizer();
 	}
 
-	vector<int> notFound = vector<int>();
-	TagList found = TagList();
+	vector<Tag> taglist = localizer.process(gray_image);
 
-	int rightTags = tags.size();
-	int foundTags = taglist.size();
+//	vector<Tag> notFound = vector<Tag *>();
+	vector<Tag> found = vector<Tag>();
 
-	for (int i = 0; i <= tags.size(); i++) {
+	for (int i = 0; i < tags.size(); i++) {
 		cv::Point p = tags.getPoint(i);
 		bool tagFound = false;
 
-		for (int j = 0; j <= taglist.size(); j++) {
+		for (int j = 0; j < taglist.size(); j++) {
 
-			Tag tag = taglist.getTag(j);
-			BoundingBox bb = tag.getBoundingBox();
-			if (bb.isPossibleCenter(p, testconfig::TEST_EXPORT_ROI_TOLERANCE)) {
-				tagFound = true;
-				if (testconfig::TEST_EXPORT_ROI_RESULT_SUBIMAGES) {
-					string img_name = tmp_success.string() + "/Box"
-							+ to_string(i + 1) + ".jpeg";
-					imwrite(img_name, tag.getOrigSubImage());
-				}
-				if (testconfig::TEST_EXPORT_ROI_RESULT_BIGIMAGES
-						&& testconfig::TEST_EXPORT_ROI_SHOW_SUCCESS) {
-					Rect box = bb.getBox();
-					line(notFoundImage, Point(box.x, box.y),
-							Point(box.x + box.width, box.y), Scalar(0, 255, 0));
-					line(notFoundImage, Point(box.x, box.y),
-							Point(box.x, box.y + box.height),
-							Scalar(0, 255, 0));
-					line(notFoundImage, Point(box.x + box.width, box.y),
-							Point(box.x + box.width, box.y + box.height),
-							Scalar(0, 255, 0));
-					line(notFoundImage, Point(box.x, box.y + box.height),
-							Point(box.x + box.width, box.y + box.height),
-							Scalar(0, 255, 0));
-					string text = "" + boost::lexical_cast<std::string>(i + 1);
-					cv::putText(notFoundImage, text, p,
-							FONT_HERSHEY_COMPLEX_SMALL, 1.5, Scalar(0, 255, 0));
+			Tag tag = taglist[j];
 
-				}
-				found.AddTag(taglist.getTag(j));
-				taglist.removeTag(j);
+			Rect box = tag.getBox();
+
+			if (TestHelpers::isPossibleCenter(p, box,
+					testconfig::TEST_EXPORT_ROI_TOLERANCE)) {
+
+				//tagFound = true;
+				found.push_back(tag);
+				//taglist.erase(j);
+				taglist.erase(taglist.begin() + j);
 				break;
 			}
 		}
-		if (!tagFound) {
-			if (testconfig::TEST_EXPORT_ROI_RESULT_SUBIMAGES) {
-				int imagesize = config::LOCALIZER_MAXTAGSIZE - 30;
 
-				rec = Rect(p.x - (imagesize / 2), p.y - (imagesize / 2),
-						imagesize, imagesize);
-				//if rectangle is outside the possible image-coordinates => resize rectangle
-				if ((rec.x + rec.width) > gray_image.cols) {
-					rec.x -= abs(rec.x + rec.width - gray_image.cols);
-				}
-
-				if ((rec.y + rec.height) > gray_image.rows) {
-					rec.y -= abs(rec.y + rec.height - gray_image.rows);
-				}
-
-				if (rec.x < 0) {
-					rec.x = 0;
-				}
-
-				if (rec.y < 0) {
-					rec.y = 0;
-				}
-
-				string img_name = tmp_notfound.string() + "/" + to_string(rec.x)
-						+ "_" + to_string(rec.y) + "__" + to_string(rec.width)
-						+ "_" + to_string(rec.height) + "__" + "__"
-						+ to_string(p.x) + "_" + to_string(p.y) + "__Box"
-						+ to_string(i + 1) + ".jpeg";
-				sub_image = Mat(gray_image, rec);
-				imwrite(img_name, sub_image);
-			}
-			if (testconfig::TEST_EXPORT_ROI_RESULT_BIGIMAGES
-					&& testconfig::TEST_EXPORT_ROI_SHOW_NOTFOUND) {
-				circle(notFoundImage, p, 20, Scalar(0, 0, 255), 3);
-				string text = "" + boost::lexical_cast<std::string>(i + 1);
-				cv::putText(notFoundImage, text, p, FONT_HERSHEY_COMPLEX_SMALL,
-						1.5, Scalar(0, 0, 255));
-			}
-
-			notFound.push_back(i);
-
-		}
-		//EXPECT_TRUE(tagFound) << "Box " << i << " wurde nicht gefunden" << endl;
 	}
-	if (testconfig::TEST_EXPORT_ROI_RESULT_SUBIMAGES
-			|| testconfig::TEST_EXPORT_ROI_RESULT_BIGIMAGES) {
-		for (int j = 0; j <= taglist.size(); j++) {
 
-			Rect box = taglist.getTag(j).getBoundingBox().getBox();
-			//generate subimage
-			if (testconfig::TEST_EXPORT_ROI_RESULT_SUBIMAGES) {
-				string img_name_f = tmp_failed.string() + "/" + to_string(box.x)
-						+ "_" + to_string(box.y) + "__" + to_string(box.width)
-						+ "_" + to_string(box.height) + ".jpeg";
+	Recognizer recognizer = Recognizer(configfile);
 
-				imwrite(img_name_f, taglist.getTag(j).getOrigSubImage());
+
+
+	clock_t f_start = clock();
+	vector<Tag> found_new = recognizer.process(found);
+	clock_t f_stop = clock();
+	double runtime_f = (double) (f_stop - f_start) / CLOCKS_PER_SEC;
+
+	int false_found = 0;
+
+	for (int i = 0; i < found_new.size(); i++) {
+		Tag tag = found_new[i];
+		if (!tag.isValid()) {
+
+			false_found++;
+			if (testconfig::TEST_EXPORT_RECOGNIZER_RESULT_SUBIMAGES) {
+
+				string img_name = tmp_notfound.string() + "/Box"
+						+ to_string(i + 1) + ".jpeg";
+				imwrite(img_name, tag.getOrigSubImage());
+				string img_name = tmp_failed.string() + "/Box_canny"
+																				+ to_string(i + 1) + ".jpeg";
+																		imwrite(img_name, tag.getCannySubImage());
 			}
-			if (testconfig::TEST_EXPORT_ROI_RESULT_BIGIMAGES
-					&& testconfig::TEST_EXPORT_ROI_SHOW_FAILED) {
-				Rect box = taglist.getTag(j).getBoundingBox().getBox();
+			if (testconfig::TEST_EXPORT_RECOGNIZER_RESULT_BIGIMAGES
+					&& testconfig::TEST_EXPORT_RECOGNIZER_SHOW_NOTFOUND) {
+
+				Rect box = tag.getBox();
 				line(notFoundImage, Point(box.x, box.y),
-						Point(box.x + box.width, box.y), Scalar(255, 0, 0));
+						Point(box.x + box.width, box.y), Scalar(0, 0, 255));
 				line(notFoundImage, Point(box.x, box.y),
-						Point(box.x, box.y + box.height), Scalar(255, 0, 0));
+						Point(box.x, box.y + box.height), Scalar(0, 0, 255));
 				line(notFoundImage, Point(box.x + box.width, box.y),
 						Point(box.x + box.width, box.y + box.height),
-						Scalar(255, 0, 0));
+						Scalar(0, 255, 0));
 				line(notFoundImage, Point(box.x, box.y + box.height),
 						Point(box.x + box.width, box.y + box.height),
-						Scalar(255, 0, 0));
+						Scalar(0, 255, 0));
+				string text = "" + boost::lexical_cast<std::string>(i + 1);
+				cv::putText(notFoundImage, text, Point(box.x, box.y),
+						FONT_HERSHEY_COMPLEX_SMALL, 1.5, Scalar(0, 0, 255));
+
+			}
+		} else {
+			if (testconfig::TEST_EXPORT_RECOGNIZER_RESULT_SUBIMAGES) {
+
+				string img_name = tmp_success.string() + "/Box"
+						+ to_string(i + 1) + ".jpeg";
+				imwrite(img_name, tag.getOrigSubImage());
+				string img_name = tmp_failed.string() + "/Box_canny"
+																				+ to_string(i + 1) + ".jpeg";
+																		imwrite(img_name, tag.getCannySubImage());
+			}
+			if (testconfig::TEST_EXPORT_RECOGNIZER_RESULT_BIGIMAGES
+					&& testconfig::TEST_EXPORT_RECOGNIZER_SHOW_SUCCESS) {
+
+				Rect box = tag.getBox();
+				line(notFoundImage, Point(box.x, box.y),
+						Point(box.x + box.width, box.y), Scalar(0, 255, 0));
+				line(notFoundImage, Point(box.x, box.y),
+						Point(box.x, box.y + box.height), Scalar(0, 255, 0));
+				line(notFoundImage, Point(box.x + box.width, box.y),
+						Point(box.x + box.width, box.y + box.height),
+						Scalar(0, 255, 0));
+				line(notFoundImage, Point(box.x, box.y + box.height),
+						Point(box.x + box.width, box.y + box.height),
+						Scalar(0, 255, 0));
+				string text = "" + boost::lexical_cast<std::string>(i + 1);
+				cv::putText(notFoundImage, text, Point(box.x, box.y),
+						FONT_HERSHEY_COMPLEX_SMALL, 1.5, Scalar(0, 255, 0));
 
 			}
 		}
+	}
+
+	clock_t t_start = clock();
+	vector<Tag> wrongFound = recognizer.process(taglist);
+	clock_t t_stop = clock();
+	double runtime_t = (double) (t_stop - t_start) / CLOCKS_PER_SEC;
+
+	int false_valid = 0;
+
+	for (int i = 0; i < wrongFound.size(); i++) {
+		Tag tag = wrongFound[i];
+
+		if (tag.isValid()) {
+			false_valid++;
+			if (testconfig::TEST_EXPORT_RECOGNIZER_RESULT_SUBIMAGES) {
+
+							string img_name = tmp_failed.string() + "/Box"
+									+ to_string(i + 1) + ".jpeg";
+							imwrite(img_name, tag.getOrigSubImage());
+							string img_name = tmp_failed.string() + "/Box_canny"
+									+ to_string(i + 1) + ".jpeg";
+							imwrite(img_name, tag.getCannySubImage());
+						}
+						if (testconfig::TEST_EXPORT_RECOGNIZER_RESULT_BIGIMAGES
+								&& testconfig::TEST_EXPORT_RECOGNIZER_SHOW_FAILED) {
+
+							Rect box = tag.getBox();
+							line(notFoundImage, Point(box.x, box.y),
+									Point(box.x + box.width, box.y), Scalar(255, 0, 0));
+							line(notFoundImage, Point(box.x, box.y),
+									Point(box.x, box.y + box.height), Scalar(255, 0, 0));
+							line(notFoundImage, Point(box.x + box.width, box.y),
+									Point(box.x + box.width, box.y + box.height),
+									Scalar(0, 255, 0));
+							line(notFoundImage, Point(box.x, box.y + box.height),
+									Point(box.x + box.width, box.y + box.height),
+									Scalar(0, 255, 0));
+							string text = "" + boost::lexical_cast<std::string>(i + 1);
+							cv::putText(notFoundImage, text, Point(box.x, box.y),
+									FONT_HERSHEY_COMPLEX_SMALL, 1.5, Scalar(255, 0, 0));
+
+						}
+		}
 
 	}
+
+//	int matchedTags = foundTags - taglist.size();
+	cout << "Ergebnisse fŸr Test " << filename.string() << endl;
+	cout << "	Es wurden " << found.size()
+			<< "  richtige Tags  an den Recognizer Ÿbergeben" << endl;
+	cout << " Laufzeit insgesamt : " << runtime_f << "ms " << endl;
+	cout << " Laufzeit pro Tag : " << runtime_f / found.size() << "ms " << endl;
+	cout << false_found << " Tags wurden nicht erkannt" << endl;
+	cout << to_string(100 - (false_found * 100 / found.size()))
+			<< "% Erkennungsrate" << endl;
+
+	cout << "Ergebnisse fŸr Test " << filename.string() << endl;
+	cout << "	Es wurden " << taglist.size()
+			<< "  falsche Tags  an den Recognizer Ÿbergeben" << endl;
+	cout << " Laufzeit insgesamt : " << runtime_t << "ms " << endl;
+	cout << " Laufzeit pro Tag : " << runtime_t / taglist.size() << "ms "
+			<< endl;
+	cout << false_valid << " Tags wurden falsch erkannt" << endl;
+	cout << to_string(100 - (false_valid * 100 / taglist.size()))
+			<< "% Erkennungsrate" << endl;
+
+	out << "Ergebnisse " << filename.stem()
+			<< ";" << found.size()
+			<< ";"<< runtime_f
+			<< ";" << to_string(runtime_f / found.size()) << ";"
+			<< false_found << ";"
+			<< to_string(100 - (false_found * 100 / found.size())) << ";"
+			<< taglist.size() << ";" << runtime_t << ";"
+			<< to_string(runtime_t / taglist.size()) << ";" << false_valid
+			<< ";" << to_string(100 - (false_valid * 100 / taglist.size())) << endl;
+
 	if (testconfig::TEST_EXPORT_ROI_RESULT_BIGIMAGES) {
 		imwrite(te_dir_tmp.string() + "/results.jpeg", notFoundImage);
 	}
 
-	Recognizer recognizer = Recognizer();
-	TagList good = TagList();
-
-
-	/*for (int i = 0; i < found.size(); i++) {
-		int j = found[i];
-		good.AddTag(taglist.getTag(j));
-	}*/
-	recognizer.process(found);
-	for (int i = 0; i < found.size(); i++) {
-			Tag tag = found.getTag(i);
-			EXPECT_TRUE(tag.isValid());
-		}
-
-	recognizer.process(taglist);
-		for (int i = 0; i < taglist.size(); i++) {
-				Tag tag = taglist.getTag(i);
-				EXPECT_FALSE(tag.isValid());
-			}
-
-//	int matchedTags = foundTags - taglist.size();
-//	cout << "Ergebnisse fŸr Test " << filename.string() << endl;
-//	cout << "	Es wurden " << foundTags << " gefunden" << endl;
-//	cout << "	Es wurden " << rightTags << " Tags  per Hand markiert" << endl;
-//	cout << "	davon wurden " << endl;
-//
-//	cout << matchedTags << " 		richtig erkannt ("
-//			<< to_string(matchedTags * 100 / rightTags)
-//			<< " % der markierten Tags)" << endl;
-//	cout << rightTags - matchedTags << " 		nicht erkannt" << endl;
-//	/*cout << "[";
-//	 for (std::vector<int>::const_iterator i = notFound.begin();
-//	 i != notFound.end(); ++i)
-//	 cout << *i << "; ";
-//	 cout << "]" << endl;*/
-//	;
-//	cout << taglist.size() << " 		falsch erkannt ("
-//			<< to_string(taglist.size() * 100 / foundTags)
-//			<< " % der gefundenen Tags)" << endl;
-//
-//	out << "Ergebnisse " << filename.stem() <<"," << foundTags
-//			<< "," << rightTags
-//			<< ","<< matchedTags
-//			<< "," << rightTags - matchedTags
-//			<< "," <<  taglist.size()
-//			<< ","<< to_string(matchedTags * 100 / rightTags)<< "%"
-//			<< ","<<  to_string(taglist.size() * 100 / foundTags) << "%" <<endl;
 }
 
-void iterateROIFolder(path p, path te_dir, ostream &out_file,
+void iterateRecognizerROIFolder(path p, path te_dir, ostream &out_file,
 		string configfile = "") {
 
 	path te_dir_tmp;
@@ -304,8 +280,8 @@ void iterateROIFolder(path p, path te_dir, ostream &out_file,
 
 					cv::Mat gray_image = conv.process(imagename.string());
 
-					excecuteTest(gray_image, filename, imagename, te_dir_tmp,
-							out_file, configfile);
+					excecuteRecognizerTest(gray_image, filename, imagename,
+							te_dir_tmp, out_file, configfile);
 
 				} catch (int e) {
 					cout << "An exception occurred. Exception Nr. " << e
@@ -323,17 +299,17 @@ void iterateROIFolder(path p, path te_dir, ostream &out_file,
 		cout << p << " does not exist\n";
 }
 
-TEST(LocalizerTest,TestLocatedTags) {
+TEST(RecognizerTest,TestLocatedTags) {
 
-	path p(testconfig::TEST_ROI_PATH); // p reads clearer than argv[1] in the following code
-	path p_conf(testconfig::TEST_ROI_CONFIGS_PATH);
+	path p(testconfig::TEST_RECOGNIZER_PATH); // p reads clearer than argv[1] in the following code
+	path p_conf(testconfig::TEST_RECOGNIZER_CONFIGS_PATH);
 
 	path te_dir, tmp_success, tmp_failed, tmp_notfound, te_dir_tmp;
 	Rect rec;
 	Mat sub_image;
 	//if results shall be exported, generate exportfolder
 
-	path p_ex(testconfig::TEST_ROI_RESULT_PATH); // p reads clearer than argv[1] in the following code
+	//path p_ex(testconfig::TEST_RECOGNIZER_RESULT_PATH); // p reads clearer than argv[1] in the following code
 
 	time_t rawtime;
 	struct tm * timeinfo;
@@ -344,7 +320,9 @@ TEST(LocalizerTest,TestLocatedTags) {
 
 	strftime(buffer, 80, "%F-%I-%M-%S", timeinfo);
 
-	te_dir = path(testconfig::TEST_ROI_RESULT_PATH + "results_" + buffer + "/");
+	te_dir = path(
+			testconfig::TEST_RECOGNIZER_RESULT_PATH + "results_" + buffer
+					+ "/");
 
 	create_directory(te_dir);
 
@@ -354,9 +332,9 @@ TEST(LocalizerTest,TestLocatedTags) {
 	std::ostream out_file(&buf);
 
 	out_file
-			<< "Testbild, gefundene Tags,markierte Tags, richtige Tags, nicht gefundene Tags, falsche Tags,richtige Tags/markierte Tags, falsche Tags/ gefundene Tags"
+			<< "Testbild; richtig uebergebene Tag; Laufzeit insgesamt /s; Laufzeit pro Tag/s; nicht erkannte Tags; Erkennungsrate;falsche uebergebene Tags; Laufzeit insgesamt /s; Laufzeit pro Tag /s; falsch erkannte Tags; Erkennungsrate;"
 			<< endl;
-	if (testconfig::TEST_ROI_USE_TESTCONFIGS) {
+	if (testconfig::TEST_RECOGNIZER_USE_TESTCONFIGS) {
 		path te_dir_tmp;
 
 		if (exists(p_conf))    // does p actually exist?
@@ -383,7 +361,7 @@ TEST(LocalizerTest,TestLocatedTags) {
 										+ "/");
 						create_directory(te_dir_tmp);
 
-						iterateROIFolder(p, te_dir_tmp, out_file,
+						iterateRecognizerROIFolder(p, te_dir_tmp, out_file,
 								filename.string());
 
 					} catch (int e) {
@@ -396,7 +374,7 @@ TEST(LocalizerTest,TestLocatedTags) {
 
 	} else {
 
-		iterateROIFolder(p, te_dir, out_file);
+		iterateRecognizerROIFolder(p, te_dir, out_file);
 	}
 
 }

@@ -20,22 +20,9 @@ public:
 	}
 
 };
-/**
- * loads Point of a prepared test-case
- *
- * @param string filename
- * @return
- */
-BBList loadTags(string filename) {
 
-	std::ifstream ifs(filename);
-	boost::archive::text_iarchive ia(ifs);
-	// read class state from archive
-	BBList tags;
-	ia & tags;
-	return tags;
 
-}
+
 
 void excecuteTest(Mat gray_image, path filename, path imagename,
 		path te_dir_tmp, ostream &out, string configfile = "") {
@@ -45,9 +32,7 @@ void excecuteTest(Mat gray_image, path filename, path imagename,
 	Mat sub_image;
 	Localizer localizer;
 
-
-
-	BBList tags = loadTags(filename.string() + "/tags.txt");
+	BBList tags = TestHelpers::loadTags(filename.string() + "/tags.txt");
 
 	if (testconfig::TEST_EXPORT_ROI_RESULT_SUBIMAGES) {
 
@@ -62,15 +47,13 @@ void excecuteTest(Mat gray_image, path filename, path imagename,
 
 	Mat notFoundImage;
 
+	if (configfile.size() == 0) {
+		localizer = Localizer();
+	} else {
 
-
-    if(configfile.size() == 0){
-			localizer = Localizer();
-	 }else{
-
-		 localizer = Localizer(configfile);
-	 }
-	TagList taglist= localizer.process(gray_image);
+		localizer = Localizer(configfile);
+	}
+	vector <Tag> taglist = localizer.process(gray_image);
 	if (testconfig::TEST_EXPORT_ROI_RESULT_BIGIMAGES) {
 		notFoundImage = imread(imagename.string());
 		string sobel_image = te_dir_tmp.string() + "/sobel.jpeg";
@@ -84,21 +67,18 @@ void excecuteTest(Mat gray_image, path filename, path imagename,
 
 	vector<int> notFound = vector<int>();
 
-
-
-
 	int rightTags = tags.size();
 	int foundTags = taglist.size();
 
-	for (int i = 0; i <= tags.size(); i++) {
+	for (int i = 0; i < tags.size(); i++) {
 		cv::Point p = tags.getPoint(i);
 		bool tagFound = false;
 
-		for (int j = 0; j <= taglist.size(); j++) {
+		for (int j = 0; j < taglist.size(); j++) {
 
-			Tag tag = taglist.getTag(j);
-			BoundingBox bb = tag.getBoundingBox();
-			if (bb.isPossibleCenter(p,
+			Tag tag = taglist[j];
+			Rect box = tag.getBox();
+			if (TestHelpers::isPossibleCenter(p, box,
 					testconfig::TEST_EXPORT_ROI_TOLERANCE)) {
 				tagFound = true;
 				if (testconfig::TEST_EXPORT_ROI_RESULT_SUBIMAGES) {
@@ -108,7 +88,7 @@ void excecuteTest(Mat gray_image, path filename, path imagename,
 				}
 				if (testconfig::TEST_EXPORT_ROI_RESULT_BIGIMAGES
 						&& testconfig::TEST_EXPORT_ROI_SHOW_SUCCESS) {
-					Rect box = bb.getBox();
+
 					line(notFoundImage, Point(box.x, box.y),
 							Point(box.x + box.width, box.y), Scalar(0, 255, 0));
 					line(notFoundImage, Point(box.x, box.y),
@@ -125,7 +105,7 @@ void excecuteTest(Mat gray_image, path filename, path imagename,
 							FONT_HERSHEY_COMPLEX_SMALL, 1.5, Scalar(0, 255, 0));
 
 				}
-				taglist.removeTag(j);
+				taglist.erase(taglist.begin() + j);
 				break;
 			}
 		}
@@ -175,22 +155,20 @@ void excecuteTest(Mat gray_image, path filename, path imagename,
 	}
 	if (testconfig::TEST_EXPORT_ROI_RESULT_SUBIMAGES
 			|| testconfig::TEST_EXPORT_ROI_RESULT_BIGIMAGES) {
-		for (int j = 0; j <= taglist.size(); j++) {
+		for (int j = 0; j < taglist.size(); j++) {
 
-		Rect box = taglist.getTag(j).getBoundingBox().getBox();
+			Rect box = taglist[j].getBox();
 			//generate subimage
 			if (testconfig::TEST_EXPORT_ROI_RESULT_SUBIMAGES) {
-				string img_name_f = tmp_failed.string() + "/"
-						+ to_string(box.x) + "_"
-						+ to_string(box.y) + "__"
-						+ to_string(box.width) + "_"
-						+ to_string(box.height) + ".jpeg";
+				string img_name_f = tmp_failed.string() + "/" + to_string(box.x)
+						+ "_" + to_string(box.y) + "__" + to_string(box.width)
+						+ "_" + to_string(box.height) + ".jpeg";
 
-				imwrite(img_name_f, taglist.getTag(j).getOrigSubImage());
+				imwrite(img_name_f, taglist[j].getOrigSubImage());
 			}
 			if (testconfig::TEST_EXPORT_ROI_RESULT_BIGIMAGES
 					&& testconfig::TEST_EXPORT_ROI_SHOW_FAILED) {
-				Rect box = taglist.getTag(j).getBoundingBox().getBox();
+				Rect box = taglist[j].getBox();
 				line(notFoundImage, Point(box.x, box.y),
 						Point(box.x + box.width, box.y), Scalar(255, 0, 0));
 				line(notFoundImage, Point(box.x, box.y),
@@ -230,25 +208,23 @@ void excecuteTest(Mat gray_image, path filename, path imagename,
 			<< to_string(taglist.size() * 100 / foundTags)
 			<< " % der gefundenen Tags)" << endl;
 
-	out << "Ergebnisse " << filename.stem() <<"," << foundTags
-			<< "," << rightTags
-			<< ","<< matchedTags
-			<< "," << rightTags - matchedTags
-			<< "," <<  taglist.size()
-			<< ","<< to_string(matchedTags * 100 / rightTags)<< "%"
-			<< ","<<  to_string(taglist.size() * 100 / foundTags) << "%" <<endl;
+	out << "Ergebnisse " << filename.stem() << "," << foundTags << ","
+			<< rightTags << "," << matchedTags << "," << rightTags - matchedTags
+			<< "," << taglist.size() << ","
+			<< to_string(matchedTags * 100 / rightTags) << "%" << ","
+			<< to_string(taglist.size() * 100 / foundTags) << "%" << endl;
 }
+
 
 void iterateROIFolder(path p, path te_dir, ostream &out_file,
 		string configfile = "") {
 
 	path te_dir_tmp;
 
-	if(configfile.size() > 0){
+	if (configfile.size() > 0) {
 		path c(configfile);
-		out_file << "Tests  mit " <<c.stem().string() << "" << endl;
+		out_file << "Tests  mit " << c.stem().string() << "" << endl;
 	}
-
 
 	if (exists(p))    // does p actually exist?
 			{
@@ -337,16 +313,16 @@ TEST(LocalizerTest,TestLocatedTags) {
 
 	create_directory(te_dir);
 
-
-
 	//create result csv-file
-			boost::iostreams::stream_buffer<boost::iostreams::file_sink> buf(
-					te_dir.string() + "results.csv");
-			std::ostream out_file(&buf);
+	boost::iostreams::stream_buffer<boost::iostreams::file_sink> buf(
+			te_dir.string() + "results.csv");
+	std::ostream out_file(&buf);
 
-			out_file << "Testbild, gefundene Tags,markierte Tags, richtige Tags, nicht gefundene Tags, falsche Tags,richtige Tags/markierte Tags, falsche Tags/ gefundene Tags" << endl;
+	out_file
+			<< "Testbild, gefundene Tags,markierte Tags, richtige Tags, nicht gefundene Tags, falsche Tags,richtige Tags/markierte Tags, falsche Tags/ gefundene Tags"
+			<< endl;
 
-		if (testconfig::TEST_ROI_USE_TESTCONFIGS) {
+	if (testconfig::TEST_ROI_USE_TESTCONFIGS) {
 		path te_dir_tmp;
 
 		if (exists(p_conf))    // does p actually exist?
@@ -369,10 +345,12 @@ TEST(LocalizerTest,TestLocatedTags) {
 						path filename = *it;
 
 						te_dir_tmp = path(
-								te_dir.string() + filename.stem().string() +"/");
+								te_dir.string() + filename.stem().string()
+										+ "/");
 						create_directory(te_dir_tmp);
 
-						iterateROIFolder(p, te_dir_tmp, out_file, filename.string());
+						iterateROIFolder(p, te_dir_tmp, out_file,
+								filename.string());
 
 					} catch (int e) {
 						cout << "An exception occurred. Exception Nr. " << e
@@ -386,6 +364,5 @@ TEST(LocalizerTest,TestLocatedTags) {
 
 		iterateROIFolder(p, te_dir, out_file);
 	}
-
 
 }

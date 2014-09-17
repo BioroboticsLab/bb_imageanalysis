@@ -20,9 +20,15 @@
 #include "decoder/Localizer.h"
 #include "decoder/Recognizer.h"
 #include "decoder/Transformer.h"
+#include "decoder/GridFitter.h"
+#include "decoder/Decoder.h"
 #include "decoder/datastructure/TagList.h"
+#include "decoder/datastructure/Ellipse.h"
+#include "decoder/datastructure/Decoding.h"
+#include <boost/filesystem.hpp>
 
 
+using namespace boost::filesystem;
 using namespace std;
 using namespace cv;
 using namespace decoder;

@@ -78,7 +78,7 @@ int main(int argc, char** argv) {
 
 	path gridsPath;
 	if (argc < 2) {
-		gridsPath = path("./test/data/grid_fitter/grids/");
+		gridsPath = path("/Users/mareikeziese/git/bb_imganalysis/test/data/grid_fitter/grids/");
 	} else {
 		gridsPath = path(argv[1]);
 		if (!is_directory(gridsPath)) {

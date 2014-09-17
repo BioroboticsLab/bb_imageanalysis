@@ -17,21 +17,6 @@ vector<Rect> ellipses;
 
 /**
  *
- * @param p
- * @param box
- * @param tolerance
- * @return
- */
-bool isPossibleCenter(Point p, Rect box, int tolerance) {
-
-	int centerx = box.x + box.width / 2;
-	int centery = box.y + box.height / 2;
-	return (p.x >= (centerx - tolerance) && p.x <= (centerx + tolerance)
-			&& p.y >= centery - tolerance && p.y <= (centery + tolerance));
-}
-
-/**
- *
  * @param windowName
  * @param img
  * @return

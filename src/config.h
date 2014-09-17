@@ -13,7 +13,9 @@ using namespace std;
 namespace config{
 
 const int DEBUG_MODE_LOCALIZER = false;
-const int DEBUG_MODE_RECOGNIZER = false;
+const int DEBUG_MODE_LOCALIZER_IMAGE = false;
+const int DEBUG_MODE_RECOGNIZER = true;
+const int DEBUG_MODE_RECOGNIZER_IMAGE = false;
 
 const string APPlICATION_ENVIROMENT = "development";
 

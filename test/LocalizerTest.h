@@ -29,6 +29,7 @@
 #include "gtest/gtest.h"
 #include "config.h"
 #include "../src/config.h"
+#include "Helpers.h"
 
 using namespace boost::filesystem;
 using namespace std;
