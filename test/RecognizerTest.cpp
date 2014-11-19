@@ -192,18 +192,18 @@ void excecuteRecognizerTest(Mat gray_image, path filename, path imagename,
 	}
 
 //	int matchedTags = foundTags - taglist.size();
-	cout << "Ergebnisse f웦 Test " << filename.string() << endl;
+	cout << "Ergebnisse f혺r Test " << filename.string() << endl;
 	cout << "	Es wurden " << found.size()
-			<< "  richtige Tags  an den Recognizer 웑ergeben" << endl;
+			<< "  richtige Tags  an den Recognizer 혺bergeben" << endl;
 	cout << " Laufzeit insgesamt : " << runtime_f << "ms " << endl;
 	cout << " Laufzeit pro Tag : " << runtime_f / found.size() << "ms " << endl;
 	cout << false_found << " Tags wurden nicht erkannt" << endl;
 	cout << to_string(100 - (false_found * 100 / found.size()))
 			<< "% Erkennungsrate" << endl;
 
-	cout << "Ergebnisse f웦 Test " << filename.string() << endl;
+	cout << "Ergebnisse f혺r Test " << filename.string() << endl;
 	cout << "	Es wurden " << taglist.size()
-			<< "  falsche Tags  an den Recognizer 웑ergeben" << endl;
+			<< "  falsche Tags  an den Recognizer 혺bergeben" << endl;
 	cout << " Laufzeit insgesamt : " << runtime_t << "ms " << endl;
 	cout << " Laufzeit pro Tag : " << runtime_t / taglist.size() << "ms "
 			<< endl;

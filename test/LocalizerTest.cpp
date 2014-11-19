@@ -189,7 +189,7 @@ void excecuteTest(Mat gray_image, path filename, path imagename,
 	}
 
 	int matchedTags = foundTags - taglist.size();
-	cout << "Ergebnisse fŸr Test " << filename.string() << endl;
+	cout << "Ergebnisse fÂŸr Test " << filename.string() << endl;
 	cout << "	Es wurden " << foundTags << " gefunden" << endl;
 	cout << "	Es wurden " << rightTags << " Tags  per Hand markiert" << endl;
 	cout << "	davon wurden " << endl;
