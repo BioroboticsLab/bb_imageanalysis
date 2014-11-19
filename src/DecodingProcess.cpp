@@ -32,36 +32,36 @@ void DecodingProcess::process(string filename) {
 	gridfitter.process(taglist);
 	decoder.process(taglist);
 
-	for (int i = 0; i < taglist.size(); i++) {
-		Tag tag = taglist.getTag(i);
+    size_t i = 0;
+    for (Tag const& tag : taglist) {
+        ++i;
+        if (tag.isValid()) {
 
-		if (tag.isValid()) {
+            cout << "Tag " << i << ":" << endl;
+            Vector<TagCandidate> candidates = tag.getCandidates();
 
-			cout << "Tag " << i << ":" << endl;
-			Vector<TagCandidate> candidates = tag.getCandidates();
+            cout << "	" << candidates.size() << " Kandidaten " << endl;
 
-			cout << "	" << candidates.size() << " Kandidaten " << endl;
+            for (unsigned int j = 0; j < candidates.size(); j++) {
+                TagCandidate candidate = candidates[j];
+                cout << "	Kandidat " << j << ":" << endl;
+                cout << "		Ellipsenscore " << candidate.getEllipse().getVote()
+                        << ":" << endl;
+                vector<Decoding> decodings = candidate.getDecodings();
 
-			for (unsigned int j = 0; j < candidates.size(); j++) {
-				TagCandidate candidate = candidates[j];
-				cout << "	Kandidat " << j << ":" << endl;
-				cout << "		Ellipsenscore " << candidate.getEllipse().getVote()
-						<< ":" << endl;
-				vector<Decoding> decodings = candidate.getDecodings();
+                for (unsigned int k = 0; k < decodings.size(); k++) {
+                    Decoding decoding = decodings[k];
+                    cout << "		Decoding " << k << ":" << endl;
+                    cout << "			Id " << decoding.id << ":" << endl;
+                    cout << "			Score " << decoding.score << ":" << endl;
 
-				for (unsigned int k = 0; k < decodings.size(); k++) {
-					Decoding decoding = decodings[k];
-					cout << "		Decoding " << k << ":" << endl;
-					cout << "			Id " << decoding.id << ":" << endl;
-					cout << "			Score " << decoding.score << ":" << endl;
+                }
 
-				}
-
-			}
-		} else {
-			cout << "Tag " << i << " ist kein gŸltiges Tag gewesen" << endl;
-		}
-	}
+            }
+        } else {
+            cout << "Tag " << i << " ist kein gÂŸltiges Tag gewesen" << endl;
+        }
+    }
 
 }
 
@@ -75,15 +75,8 @@ int main(int argc, char** argv) {
 			cerr << "No image given";
 			return 1;
 		}else{
-			Converter converter = Converter();
-			Localizer localizer = Localizer();
-			Recognizer recognizer = Recognizer();
-			Mat image = converter.process(image_name.string());
-			vector<Tag> taglist = localizer.process(image);
-			recognizer.process(taglist);
-
-			//DecodingProcess dprocess = DecodingProcess();
-			//dprocess.process(image_name.string());
+            DecodingProcess dprocess = DecodingProcess();
+            dprocess.process(image_name.string());
 		}
 
 }
