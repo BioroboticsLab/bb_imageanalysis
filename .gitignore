@@ -14,3 +14,4 @@
 /testing/
 /Data/
 test/testdata/grid_fitter
+*.user
