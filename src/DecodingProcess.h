@@ -22,7 +22,6 @@
 #include "decoder/Transformer.h"
 #include "decoder/GridFitter.h"
 #include "decoder/Decoder.h"
-#include "decoder/datastructure/TagList.h"
 #include "decoder/datastructure/Ellipse.h"
 #include "decoder/datastructure/Decoding.h"
 #include <boost/filesystem.hpp>
