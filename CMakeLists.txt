@@ -45,4 +45,6 @@ include_directories(
 	SYSTEM ${Boost_INCLUDE_DIR}
 )
 
+add_definitions(-DPipelineStandalone)
+
 add_subdirectory(src)
