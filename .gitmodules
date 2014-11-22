@@ -1,0 +1,3 @@
+[submodule "src/decoder"]
+	path = src/decoder
+	url = file:///home/ben/dev/bb_imganalysis_pipeline
