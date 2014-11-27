@@ -27,10 +27,10 @@ void DecodingProcess::process(string filename) {
 
 	Mat image = converter.process(filename);
 	vector<Tag> taglist = localizer.process(image);
-	recognizer.process(taglist);
-	transformer.process(taglist);
-	gridfitter.process(taglist);
-	decoder.process(taglist);
+	taglist = recognizer.process(taglist);
+	taglist = transformer.process(taglist);
+	//taglist = gridfitter.process(taglist);
+	//taglist = decoder.process(taglist);
 
     size_t i = 0;
     for (Tag const& tag : taglist) {
