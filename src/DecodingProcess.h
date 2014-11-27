@@ -40,3 +40,4 @@ public:
 };
 
 #endif /* DECODINGPROCESS_H_ */
+
