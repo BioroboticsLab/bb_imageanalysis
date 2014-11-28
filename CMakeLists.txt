@@ -69,4 +69,7 @@ include_directories(
 	SYSTEM ${Boost_INCLUDE_DIR}
 )
 
+add_definitions(-DPipelineStandalone)
+#add_definitions(-DDEBUG_SHOW_DECODED_GRID)
+
 add_subdirectory(src)
