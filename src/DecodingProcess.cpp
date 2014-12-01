@@ -7,76 +7,88 @@
 
 #include "DecodingProcess.h"
 
-DecodingProcess::DecodingProcess() {
-	// TODO Auto-generated constructor stub
+#include <chrono>
+
+namespace {
+class MeasureTimeRAII {
+public:
+    MeasureTimeRAII(std::string const& what)
+        : _start(std::chrono::steady_clock::now())
+        , _what(what)
+    {}
+    ~MeasureTimeRAII()
+    {
+        std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
+        std::cout << _what << " took "
+                  << std::chrono::duration_cast<std::chrono::milliseconds>(end - _start).count()
+                  << "ms.\n";
+    }
+private:
+    std::chrono::steady_clock::time_point _start;
+    std::string _what;
+};
 
 }
 
-DecodingProcess::~DecodingProcess() {
-	// TODO Auto-generated destructor stub
-}
+void DecodingProcess::process(string filename) const {
+    Converter converter;
+    Localizer localizer;
+    Recognizer recognizer;
+    Transformer transformer;
+    GridFitter gridfitter;
+    Decoder decoder;
 
-void DecodingProcess::process(string filename) {
-
-	Converter converter = Converter();
-	Localizer localizer = Localizer();
-	Recognizer recognizer = Recognizer();
-	Transformer transformer = Transformer();
-	GridFitter gridfitter = GridFitter();
-	Decoder decoder = Decoder();
-
-	Mat image = converter.process(filename);
-	vector<Tag> taglist = localizer.process(image);
-	taglist = recognizer.process(taglist);
-	taglist = transformer.process(taglist);
-	//taglist = gridfitter.process(taglist);
-	//taglist = decoder.process(taglist);
-
-    size_t i = 0;
-    for (Tag const& tag : taglist) {
-        ++i;
-        if (tag.isValid()) {
-
-            cout << "Tag " << i << ":" << endl;
-            Vector<TagCandidate> candidates = tag.getCandidates();
-
-            cout << "	" << candidates.size() << " Kandidaten " << endl;
-
-            for (unsigned int j = 0; j < candidates.size(); j++) {
-                TagCandidate candidate = candidates[j];
-                cout << "	Kandidat " << j << ":" << endl;
-                cout << "		Ellipsenscore " << candidate.getEllipse().getVote()
-                        << ":" << endl;
-                vector<Decoding> decodings = candidate.getDecodings();
-
-                for (unsigned int k = 0; k < decodings.size(); k++) {
-                    Decoding decoding = decodings[k];
-                    cout << "		Decoding " << k << ":" << endl;
-                    cout << "			Id " << decoding.id << ":" << endl;
-                    cout << "			Score " << decoding.score << ":" << endl;
-
-                }
-
-            }
-        } else {
-            cout << "Tag " << i << " ist kein gltiges Tag gewesen" << endl;
-        }
+    Mat img = converter.process(filename);
+    vector<Tag> taglist;
+    {
+        MeasureTimeRAII measure("Localizer");
+        taglist = localizer.process(std::move(img));
+    }
+    {
+        MeasureTimeRAII measure("Recognizer");
+        taglist = recognizer.process(std::move(taglist));
+    }
+    {
+        MeasureTimeRAII measure("Transformer");
+        taglist = transformer.process(std::move(taglist));
+    }
+    {
+        MeasureTimeRAII measure("GridFitter");
+        taglist = gridfitter.process(std::move(taglist));
+    }
+    {
+        MeasureTimeRAII measure("Decoder");
+        taglist = decoder.process(std::move(taglist));
     }
 
+    // remove invalid tags
+    taglist.erase(std::remove_if(taglist.begin(), taglist.end(), [](Tag& tag) { return !tag.isValid(); }), taglist.end());
+    std::cout << std::endl << taglist.size() << " Tags gefunden" << std::endl << std::endl;
+    for (Tag& tag : taglist) {
+        std::cout << "Tag: " << std::endl;
+        vector<TagCandidate>& candidates = tag.getCandidates();
+        std::cout << "\t" << candidates.size() << " Kandidaten " << std::endl;
+        for (TagCandidate& candidate : candidates) {
+            std::cout << "\tKandidat: " << std::endl;
+            std::cout << "\t\tEllipsenscore " << candidate.getEllipse().getVote() << ":" << std::endl;
+            for (Decoding const& decoding : candidate.getDecodings()) {
+                std::cout << "\t\tDecoding :" << endl;
+                std::cout << "\t\t\tId "<< decoding.id << ":" << std::endl;
+                std::cout << "\t\t\tScore " << decoding.score << ":" << endl;
+            }
+        }
+    }
 }
 
-
 int main(int argc, char** argv) {
+    path image_name;
 
-	path image_name;
-
-		image_name = path(argv[1]);
-		if (!exists(image_name)) {
-			cerr << "No image given";
-			return 1;
-		}else{
-            DecodingProcess dprocess = DecodingProcess();
-            dprocess.process(image_name.string());
-		}
-
+    image_name = path(argv[1]);
+    if (!exists(image_name)) {
+        cerr << "No image given";
+        return 1;
+    }else{
+        DecodingProcess dprocess = DecodingProcess();
+        dprocess.process(image_name.string());
+    }
 }
