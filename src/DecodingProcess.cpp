@@ -73,7 +73,7 @@ void DecodingProcess::process(string filename) const {
             std::cout << "\t\tEllipsenscore " << candidate.getEllipse().getVote() << ":" << std::endl;
             for (Decoding const& decoding : candidate.getDecodings()) {
                 std::cout << "\t\tDecoding :" << endl;
-                std::cout << "\t\t\tId "<< decoding.id << ":" << std::endl;
+				std::cout << "\t\t\tId "<< decoding.tagId << ":" << std::endl;
                 std::cout << "\t\t\tScore " << decoding.score << ":" << endl;
             }
         }
