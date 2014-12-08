@@ -1,7 +1,5 @@
 cmake_minimum_required(VERSION 2.6)
 
-cmake_policy (SET CMP0020 NEW)
-
 project(bb_imganalysis)
 
 # project dependecies
@@ -18,13 +16,13 @@ if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang" OR
    "${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
         # using Clang or GCC
         # minimal optimization and debug symbols for debug builds
-        set(CMAKE_CXX_FLAGS_DEBUG "-Og -ggdb")
+        set(CMAKE_CXX_FLAGS_DEBUG "-O1 -ggdb")
         # enable optimization for release builds
   set(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG -DQT_NO_DEBUG")
   # enable C++1y
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++1y")
   # enable all warnings
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic -Woverloaded-virtual -Wold-style-cast -Wnon-virtual-dtor -Wsign-promo")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic -Woverloaded-virtual -Wold-style-cast -Wnon-virtual-dtor -Wsign-promo -Wno-missing-braces")
   # warnings are errors
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror -Wno-error=unused-variable -Wno-error=unused-parameter")
 elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
