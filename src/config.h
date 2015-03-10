@@ -20,9 +20,9 @@ const int DEBUG_MODE_RECOGNIZER_IMAGE = false;
 const string APPlICATION_ENVIROMENT = "development";
 
 
-const string DEFAULT_LOCALIZER_CONFIG = "/Users/mareikeziese/git/bb_imganalysis/src/decoder/localizer.ini";
+const string DEFAULT_LOCALIZER_CONFIG = "/home/ben/dev/bb_imganalysis/src/decoder/localizer.ini";
 
-const string DEFAULT_RECOGNIZER_CONFIG = "/Users/mareikeziese/git/bb_imganalysis/src/decoder/recognizer.ini";
+const string DEFAULT_RECOGNIZER_CONFIG = "/home/ben/dev/bb_imganalysis/src/decoder/recognizer.ini";
 
 /******************************************
  *
