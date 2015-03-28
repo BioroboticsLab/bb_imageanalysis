@@ -8,6 +8,16 @@
 #include "DecodingProcess.h"
 
 #include <chrono>
+#include <cstdlib>
+#include <iostream>
+
+#include <opencv2/opencv.hpp>
+
+#include "pipeline/Preprocessor.h"
+#include "pipeline/Localizer.h"
+#include "pipeline/EllipseFitter.h"
+#include "pipeline/GridFitter.h"
+#include "pipeline/Decoder.h"
 
 namespace {
 class MeasureTimeRAII {
@@ -30,37 +40,38 @@ private:
 
 }
 
-void DecodingProcess::process(string filename) const {
-    Converter converter;
-    Localizer localizer;
-    Recognizer recognizer;
-    Transformer transformer;
-    GridFitter gridfitter;
-    Decoder decoder;
+void DecodingProcess::process(std::string const& filename) const {
+	pipeline::Preprocessor preprocessor;
+	pipeline::Localizer localizer;
+	pipeline::EllipseFitter ellipseFitter;
+	pipeline::GridFitter gridFitter;
+	pipeline::Decoder decoder;
 
-    Mat img = converter.process(filename);
-    vector<Tag> taglist;
+	cv::Mat img = cv::imread(filename);
+	cv::Mat preprocessedImg;
+    std::vector<pipeline::Tag> taglist;
+    {
+        MeasureTimeRAII measure("Preprocessor");
+		preprocessedImg = preprocessor.process(img);
+    }
     {
         MeasureTimeRAII measure("Localizer");
-        taglist = localizer.process(std::move(img));
+		taglist = localizer.process(std::move(img), std::move(preprocessedImg));
     }
     {
-        MeasureTimeRAII measure("Recognizer");
-        taglist = recognizer.process(std::move(taglist));
-    }
-    {
-        MeasureTimeRAII measure("Transformer");
-        taglist = transformer.process(std::move(taglist));
+        MeasureTimeRAII measure("EllipseFitter");
+		taglist = ellipseFitter.process(std::move(taglist));
     }
     {
         MeasureTimeRAII measure("GridFitter");
-        taglist = gridfitter.process(std::move(taglist));
+        taglist = gridFitter.process(std::move(taglist));
     }
     {
         MeasureTimeRAII measure("Decoder");
         taglist = decoder.process(std::move(taglist));
     }
 
+	using namespace pipeline;
     // remove invalid tags
     taglist.erase(std::remove_if(taglist.begin(), taglist.end(), [](Tag& tag) { return !tag.isValid(); }), taglist.end());
     std::cout << std::endl << taglist.size() << " Tags gefunden" << std::endl << std::endl;
@@ -71,24 +82,28 @@ void DecodingProcess::process(string filename) const {
         for (TagCandidate& candidate : candidates) {
             std::cout << "\tKandidat: " << std::endl;
             std::cout << "\t\tEllipsenscore " << candidate.getEllipse().getVote() << ":" << std::endl;
-            for (Decoding const& decoding : candidate.getDecodings()) {
+            for (decoding_t const& decoding : candidate.getDecodings()) {
                 std::cout << "\t\tDecoding :" << endl;
-				std::cout << "\t\t\tId "<< decoding.tagId << ":" << std::endl;
-                std::cout << "\t\t\tScore " << decoding.score << ":" << endl;
+				std::cout << "\t\t\tId "<< decoding.to_string() << std::endl;
             }
         }
     }
 }
 
-int main(int argc, char** argv) {
-    path image_name;
+#include <boost/filesystem.hpp>
 
-    image_name = path(argv[1]);
+int main(int argc, char** argv) {
+	if (argc != 2) {
+        std::cerr << "Invalid number of arguments" << std::endl;
+        return EXIT_FAILURE;
+	}
+	boost::filesystem::path image_name(argv[1]);
+
     if (!exists(image_name)) {
-        cerr << "No image given";
-        return 1;
-    }else{
-        DecodingProcess dprocess = DecodingProcess();
-        dprocess.process(image_name.string());
+        std::cerr << "Invalid path" << std::endl;
+        return EXIT_FAILURE;
     }
+
+	DecodingProcess dprocess = DecodingProcess();
+	dprocess.process(image_name.string());
 }

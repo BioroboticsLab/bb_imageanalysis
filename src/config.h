@@ -14,15 +14,15 @@ namespace config{
 
 const int DEBUG_MODE_LOCALIZER = false;
 const int DEBUG_MODE_LOCALIZER_IMAGE = false;
-const int DEBUG_MODE_RECOGNIZER = false;
-const int DEBUG_MODE_RECOGNIZER_IMAGE = false;
+const int DEBUG_MODE_ELLIPSEFITTER = false;
+const int DEBUG_MODE_ELLIPSEFITTER_IMAGE = false;
 
 const string APPlICATION_ENVIROMENT = "development";
 
 
 const string DEFAULT_LOCALIZER_CONFIG = "/home/ben/dev/bb_imganalysis/src/decoder/localizer.ini";
 
-const string DEFAULT_RECOGNIZER_CONFIG = "/home/ben/dev/bb_imganalysis/src/decoder/recognizer.ini";
+const string DEFAULT_ELLIPSEFITTER_CONFIG = "/home/ben/dev/bb_imganalysis/src/decoder/recognizer.ini";
 
 /******************************************
  *
