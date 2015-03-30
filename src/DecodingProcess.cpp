@@ -7,11 +7,13 @@
 
 #include "DecodingProcess.h"
 
-#include "dirent.h"
 #include <stdio.h>
 #include <chrono>
 #include <cstdlib>
 #include <iostream>
+
+#include <dirent.h>
+#include <sys/resource.h>
 
 #include <opencv2/opencv.hpp>
 
@@ -22,12 +24,9 @@
 #include "pipeline/Decoder.h"
 #include <boost/filesystem.hpp>
 
-#define DEBUG_PROGRAM
-
-	using namespace boost::filesystem;
-
 //#define DEBUG_PROGRAM
 
+using namespace boost::filesystem;
 
 namespace {
 class MeasureTimeRAII {
@@ -224,8 +223,11 @@ void listImagesDebug(const char *directoryName,
 }
 
 int main(int argc, char** argv) {
+	// enable core dumps on crash
+	rlimit core_limit = { RLIM_INFINITY, RLIM_INFINITY };
+	setrlimit( RLIMIT_CORE, &core_limit );
 
-// create a list of the files this process has to analyse
+	// create a list of the files this process has to analyse
 	vector<std::string> imageFiles;
 	if (argc <= 1) {
 		std::cerr << "directory is missing" << std::endl;
