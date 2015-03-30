@@ -160,7 +160,7 @@ void DecodingProcess::process(std::string const& filename) const {
 	Export ex = Export();
 	ex.writeCSV(taglist, p.parent_path().string()+"/"+p.stem().string()+".csv");
 	ex.writeSerializedObjects(taglist, p.parent_path().string()+"/"+p.stem().string()+".dat");
-	std::vector<pipeline::Tag> new_taglist  = ex.readSerializedObjects( p.parent_path().string()+"/"+p.stem().string()+".dat");
+	/*std::vector<pipeline::Tag> new_taglist  = ex.readSerializedObjects( p.parent_path().string()+"/"+p.stem().string()+".dat");
 
 	// remove invalid tags
 	new_taglist.erase(
@@ -181,7 +181,7 @@ void DecodingProcess::process(std::string const& filename) const {
 				std::cout << "\t\t\tId " << decoding.to_string() << std::endl;
 			}
 		}
-	}
+	}*/
 }
 
 
