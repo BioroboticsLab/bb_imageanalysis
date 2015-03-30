@@ -75,5 +75,6 @@ include_directories(
 
 add_definitions(-DPipelineStandalone)
 #add_definitions(-DDEBUG_SHOW_DECODED_GRID)
+add_definitions(-DBOOST_LOG_DYN_LINK)
 
 add_subdirectory(src)
