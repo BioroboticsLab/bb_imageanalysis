@@ -8,7 +8,10 @@
 #include "DecodingProcess.h"
 
 #include "dirent.h"
+#include <mpi.h>
+#include <fstream>
 #include <stdio.h>
+#include <unistd.h>
 #include <chrono>
 #include <cstdlib>
 #include <iostream>
@@ -22,7 +25,7 @@
 #include "pipeline/Decoder.h"
 #include <boost/filesystem.hpp>
 
-#define DEBUG_PROGRAM
+//#define DEBUG_PROGRAM
 
 	using namespace boost::filesystem;
 
@@ -202,9 +205,30 @@ bool checkValidFilename(const string& filename) {
 	return false;
 }
 
-void listImagesDebug(const char *directoryName,
-		vector<std::string> &imageFiles) {
-	std::string path = std::string(directoryName);
+void listImagesCray( const char *directoryName, vector< std::string > &imageFiles, int world_rank ) {
+	std::string path = std::string( directoryName ) + "/" + "proc_" + to_string( (long long) world_rank ) + "/";
+	DIR *directory = opendir( path.c_str( ));
+	struct dirent *file;
+	while( ( file = readdir( directory )) ) {
+		if (( file->d_type & DT_DIR )) { // directories are uninteresting
+			continue;
+		}		// here be file..
+		
+		std::string filename = path + file->d_name;
+		if (checkValidFilename(filename)) {
+			imageFiles.push_back(filename);
+		} else {
+			Logger::log(
+					std::stringstream().flush() << "ignoring file " << filename,
+					severity_level::warning);
+		}
+	}
+	closedir( directory );
+}
+
+void listImagesDebug(const char *directoryName,	vector<std::string> &imageFiles) {
+	//std::string path = std::string(directoryName);	
+	std::string path = std::string(directoryName)+ "/" + "proc_0" + "/";	
 	DIR *directory = opendir(path.c_str());
 	struct dirent *file;
 	while ((file = readdir(directory))) {
@@ -225,8 +249,26 @@ void listImagesDebug(const char *directoryName,
 }
 
 int main(int argc, char** argv) {
+    // enable core dumps on crash
+    rlimit core_limit = { RLIM_INFINITY, RLIM_INFINITY };
+    setrlimit( RLIMIT_CORE, &core_limit );
 
-// create a list of the files this process has to analyse
+	// The MPI stuff to identify each process
+#ifdef CRAY
+	MPI_Init( NULL, NULL );
+	int world_size;
+	int world_rank;
+	
+	// Get the number of processes
+	MPI_Comm_size( MPI_COMM_WORLD, &world_size );
+	// Get the rank of the process
+	MPI_Comm_rank( MPI_COMM_WORLD, &world_rank );
+	if ( world_rank == 0 ) {
+		cout << "There are " + to_string( (long long) world_size ) + " processes working." << endl;		
+	}
+#endif
+	
+	// create a list of the files this process has to analyse
 	vector<std::string> imageFiles;
 	if (argc <= 1) {
 		std::cerr << "directory is missing" << std::endl;
@@ -234,10 +276,12 @@ int main(int argc, char** argv) {
 	}
 	char* directoryName = argv[1];
 	Logger::init(directoryName);
-	Logger::log(
-			std::stringstream().flush() << "start decoder process on folder "
-					<< directoryName,severity_level::notification);
+	Logger::log(std::stringstream().flush() << "start decoder process on folder "<< directoryName,severity_level::notification);
+#ifdef CRAY
+	listImagesCray( directoryName, imageFiles, world_rank );
+#else	
 	listImagesDebug(directoryName, imageFiles);
+#endif
 
 	unsigned int imageCount = imageFiles.size();
 	if (imageCount == 0) {
@@ -269,4 +313,12 @@ int main(int argc, char** argv) {
 		if (::remove(std::string(imageFiles[imageNumber]).c_str()) != 0)
 			perror("Error deleting the image ");
 	}
+#ifdef CRAY
+	// make sure all processes finished 
+	MPI_Finalize( );
+	if ( world_rank == 0 ) {
+		cout << "Overall job time: " << endl;	
+	}
+#endif
+	return 0;
 }
