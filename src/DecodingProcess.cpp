@@ -247,6 +247,9 @@ void listImagesDebug(const char *directoryName,	vector<std::string> &imageFiles)
 }
 
 int main(int argc, char** argv) {
+    // enable core dumps on crash
+    rlimit core_limit = { RLIM_INFINITY, RLIM_INFINITY };
+    setrlimit( RLIMIT_CORE, &core_limit );
 
 	// The MPI stuff to identify each process
 #ifdef CRAY

@@ -9,18 +9,16 @@ project(bb_imganalysis)
 find_package(OpenCV REQUIRED)
 find_package(Boost COMPONENTS filesystem serialization system log log_setup thread date_time  REQUIRED) 
 
-# remove all previously set compiler and linker flags for debug build
-if("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
-  set(CMAKE_CXX_FLAGS " -DBOOST_LOG_DYN_LINK -DBOOST_ALL_DYN_LINK")
-  set(CMAKE_EXE_LINKER_FLAGS "-lpthread  -DBOOST_LOG_DYN_LINK -DBOOST_ALL_DYN_LINK")
-endif()
+# remove all previously set compiler and linker flags
+set(CMAKE_CXX_FLAGS "")
+set(CMAKE_EXE_LINKER_FLAGS "")
 
 if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang" OR
    "${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-        # using Clang or GCC
-        # minimal optimization and debug symbols for debug builds
-        set(CMAKE_CXX_FLAGS_DEBUG "-O1 -ggdb")
-        # enable optimization for release builds
+  # using Clang or GCC
+  # minimal optimization and debug symbols for debug builds
+  set(CMAKE_CXX_FLAGS_DEBUG "-O1 -ggdb")
+  # enable optimization for release builds
   set(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG -DQT_NO_DEBUG")
   # enable C++1y
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++1y")
@@ -29,7 +27,7 @@ if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang" OR
   # warnings are errors
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror -Wno-error=unused-variable -Wno-error=unused-parameter")
 elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
-        # using Visual Studio C++
+  # using Visual Studio C++
   # Force to always compile with W4 and treat warnings as errors
   if(CMAKE_CXX_FLAGS MATCHES "/W[0-4]")
     string(REGEX REPLACE "/W[0-4]" "/W3" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
@@ -48,11 +46,16 @@ if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-error=unused-but-set-variable")
 endif()
 
-if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" AND
-    "${CMAKE_BUILD_TYPE}" STREQUAL "Release")
-        set(CMAKE_CXX_FLAGS_RELEASE "-Ofast -DNDEBUG -march=native -pipe -fPIC -std=c++1y -ffast-math -flto -funroll-loops -fpeel-loops")
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS_RELEASE}")
-        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_CXX_FLAGS_RELEASE}")
+if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+  if ("${CMAKE_BUILD_TYPE}" STREQUAL "Release")
+    set(CMAKE_CXX_FLAGS_RELEASE "-Ofast -DNDEBUG -march=native -pipe -fPIC -std=c++1y -ffast-math -flto -funroll-loops -fpeel-loops")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_CXX_FLAGS_RELEASE}")
+  endif()
+
+  if ("${CMAKE_BUILD_TYPE}" STREQUAL "RelWithDebInfo")
+    set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-Ofast -ggdb -DNDEBUG -march=native -pipe -fPIC -std=c++1y -ffast-math -flto -funroll-loops -fpeel-loops")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_CXX_FLAGS_RELWITHDEBINFO}")
+  endif()
 endif()
 
 if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang" AND
@@ -63,7 +66,6 @@ if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang" AND
  set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=undefined")
  set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=integer")
 endif()
-
 
 set(Boost_USE_MULTITHREADED OFF)
 
