@@ -32,6 +32,7 @@
 #include <boost/log/sinks/text_ostream_backend.hpp>
 #include <boost/log/attributes/scoped_attribute.hpp>
 #include <boost/log/utility/setup/common_attributes.hpp>
+#include <boost/log/sinks/text_ostream_backend.hpp>
 
 
 namespace logging = boost::log;
@@ -60,10 +61,6 @@ public:
 	 * setup the log file for the current process
 	 */
 	static void init(std::string directoryName = "") {
-		typedef sinks::synchronous_sink<sinks::text_ostream_backend> text_sink;
-
-
-		boost::shared_ptr<text_sink> sink = boost::make_shared<text_sink>();
 
 		std::string logFile;
 		if(directoryName.length() > 0){
@@ -73,9 +70,24 @@ public:
 		}
 
 
-		//lock log-file
-		sink->locked_backend()->add_stream(
-				boost::make_shared<std::ofstream>(logFile));
+
+	    boost::shared_ptr< logging::core > core = logging::core::get();
+
+	    // Create a backend and attach a couple of streams to it
+	    boost::shared_ptr< sinks::text_ostream_backend > backend =
+	        boost::make_shared< sinks::text_ostream_backend >();
+	    backend->add_stream(
+	        boost::shared_ptr< std::ostream >(new std::ofstream(logFile)));
+
+	    // Enable auto-flushing after each log record written
+	    backend->auto_flush(true);
+
+	    // Wrap it into the frontend and register in the core.
+	    // The backend requires synchronization in the frontend.
+	    typedef sinks::synchronous_sink< sinks::text_ostream_backend > sink_t;
+	    boost::shared_ptr< sink_t > sink(new sink_t(backend));
+
+
 
 		// Add attributes
 		logging::add_common_attributes();
