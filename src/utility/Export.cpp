@@ -55,10 +55,19 @@ void Export::writeCSV(std::vector<Tag>taglist, std::string exportfile) {
 	}
 }
 
-/*void Export::writeSerializedObjects(std::vector<pipeline::Tag> taglist, std::string exportfile){
+void Export::writeSerializedObjects(std::vector<pipeline::Tag> taglist, std::string exportfile){
 	std::ofstream ofs(exportfile);
 	boost::archive::binary_oarchive oa(ofs);
 				//boost::archive::text_oarchive oa(ofs);
 				oa & taglist;
-}*/
+}
+
+std::vector<pipeline::Tag> Export::readSerializedObjects(std::string exportfile){
+	std::vector<pipeline::Tag> taglist = std::vector<pipeline::Tag>() ;
+	/*std::ifstream ifs(exportfile);
+	boost::archive::binary_iarchive ia(ifs);
+				//boost::archive::text_oarchive oa(ofs);
+				ia & taglist;*/
+				return taglist;
+}
 

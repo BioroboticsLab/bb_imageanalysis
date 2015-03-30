@@ -158,15 +158,17 @@ void DecodingProcess::process(std::string const& filename) const {
 
 	path p (filename);
 	Export ex = Export();
-	ex.writeCSV(taglist, p.parent_path().string()+"/"+p.filename().string()+".csv");
+	ex.writeCSV(taglist, p.parent_path().string()+"/"+p.stem().string()+".csv");
+	ex.writeSerializedObjects(taglist, p.parent_path().string()+"/"+p.stem().string()+".dat");
+	std::vector<pipeline::Tag> new_taglist  = ex.readSerializedObjects( p.parent_path().string()+"/"+p.stem().string()+".dat");
 
 	// remove invalid tags
-	/*taglist.erase(
-			std::remove_if(taglist.begin(), taglist.end(),
-					[](Tag& tag) {return !tag.isValid();}), taglist.end());
-	std::cout << std::endl << taglist.size() << " Tags gefunden" << std::endl
+	new_taglist.erase(
+			std::remove_if(new_taglist.begin(), new_taglist.end(),
+					[](Tag& tag) {return !tag.isValid();}), new_taglist.end());
+	std::cout << std::endl << new_taglist.size() << " Tags gefunden" << std::endl
 			<< std::endl;
-	for (Tag& tag : taglist) {
+	for (Tag& tag : new_taglist) {
 		std::cout << "Tag: " << std::endl;
 		vector<TagCandidate>& candidates = tag.getCandidates();
 		std::cout << "\t" << candidates.size() << " Kandidaten " << std::endl;
@@ -179,7 +181,7 @@ void DecodingProcess::process(std::string const& filename) const {
 				std::cout << "\t\t\tId " << decoding.to_string() << std::endl;
 			}
 		}
-	}*/
+	}
 }
 
 
