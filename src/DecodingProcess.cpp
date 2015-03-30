@@ -26,6 +26,7 @@
 
 	using namespace boost::filesystem;
 
+//#define DEBUG_PROGRAM
 
 
 namespace {
