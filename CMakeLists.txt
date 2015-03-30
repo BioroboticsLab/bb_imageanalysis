@@ -3,13 +3,16 @@ cmake_minimum_required(VERSION 2.6)
 project(bb_imganalysis)
 
 # project dependecies
+
+
+
 find_package(OpenCV REQUIRED)
-find_package(Boost COMPONENTS filesystem serialization system REQUIRED) 
+find_package(Boost COMPONENTS filesystem serialization system log log_setup thread date_time  REQUIRED) 
 
 # remove all previously set compiler and linker flags for debug build
 if("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
-  set(CMAKE_CXX_FLAGS "")
-  set(CMAKE_EXE_LINKER_FLAGS "")
+  set(CMAKE_CXX_FLAGS " -DBOOST_LOG_DYN_LINK -DBOOST_ALL_DYN_LINK")
+  set(CMAKE_EXE_LINKER_FLAGS "-lpthread  -DBOOST_LOG_DYN_LINK -DBOOST_ALL_DYN_LINK")
 endif()
 
 if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang" OR
@@ -53,13 +56,16 @@ if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" AND
 endif()
 
 if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang" AND
-   "${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
+   "${CMAKE_BUILD_TYPE}" STREQUAL "Debug" AND NOT(${UNIX}))
  set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fno-omit-frame-pointer")
  set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fno-optimize-sibling-calls")
  set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=address")
  set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=undefined")
  set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=integer")
 endif()
+
+
+set(Boost_USE_MULTITHREADED OFF)
 
 include_directories(
 	${PROJECT_SOURCE_DIR}
