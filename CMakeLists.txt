@@ -72,6 +72,7 @@ include_directories(
 	${PROJECT_SOURCE_DIR}
 	SYSTEM ${OpenCV_INCLUDE_DIRS}
 	SYSTEM ${Boost_INCLUDE_DIR}
+	SYSTEM ${MPI_CXX_INCLUDE_PATH}
 )
 
 add_definitions(-DPipelineStandalone)
