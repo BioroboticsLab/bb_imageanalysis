@@ -7,7 +7,6 @@
 
 #include "DecodingProcess.h"
 
-#include "dirent.h"
 #include <mpi.h>
 #include <fstream>
 #include <stdio.h>
@@ -15,6 +14,9 @@
 #include <chrono>
 #include <cstdlib>
 #include <iostream>
+
+#include <dirent.h>
+#include <sys/resource.h>
 
 #include <opencv2/opencv.hpp>
 
@@ -68,8 +70,6 @@ void DecodingProcess::_loadMetaInfos(const std::string &filename) {
 					<< this->meta_infos.camera_id,severity_level::normal);
 	std::string timestring = filename.substr(6, 14);
 	std::cout << "camera id " << timestring << std::endl;
-	time_t timestamp = seconds_from_epoch(timestring);
-
 }
 
 void DecodingProcess::process(std::string const& filename) const {
