@@ -8,6 +8,7 @@ add_executable(bb_imganalysis
 target_link_libraries(bb_imganalysis
     ${OpenCV_LIBS}
     ${Boost_LIBRARIES}
+    ${MPI_CXX_LIBRARIES}
 )
 
 # add files to source groups to preserve folder structure in visual studio
