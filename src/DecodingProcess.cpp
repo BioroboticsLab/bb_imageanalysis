@@ -29,9 +29,14 @@
 
 //#define DEBUG_PROGRAM
 
-	using namespace boost::filesystem;
+/* MPI macros cause old-style-cast warnings. Therefore, if compiling with MPI,
+ * we have to disable this specific warning for this compilation unit. */
+#if defined(CRAY) && (defined(__GNUC__) || defined(__clang__))
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wold-style-cast"
+#endif
 
-
+using namespace boost::filesystem;
 
 namespace {
 class MeasureTimeRAII {
@@ -323,3 +328,7 @@ int main(int argc, char** argv) {
 #endif
 	return 0;
 }
+
+#if defined(CRAY) && (defined(__GNUC__) || defined(__clang__))
+#pragma GCC diagnostic pop
+#endif
