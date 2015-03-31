@@ -206,7 +206,7 @@ bool checkValidFilename(const string& filename) {
 }
 
 void listImagesCray( const char *directoryName, vector< std::string > &imageFiles, int world_rank ) {
-	std::string path = std::string( directoryName ) + "/" + "proc_" + to_string( (long long) world_rank ) + "/";
+	std::string path = std::string( directoryName ) + "/" + "proc_" + to_string(static_cast<long>(world_rank)) + "/";
 	DIR *directory = opendir( path.c_str( ));
 	struct dirent *file;
 	while( ( file = readdir( directory )) ) {
