@@ -17,15 +17,19 @@ class Tag;
 class Export {
 public:
 	/**
-	 *  writes a csv file with the following format:
-	 *			tmp_id 	: temporary Id, to determine, which rows belongs to the same detection
-	 * 			angle   : z- rotation of the Grid
-	 *			x		: x- coordinate of the Grid
-	 *			y		: y- coordinate of the Grid
-	 *			vote	: vote for the TagCandidate
-	 *			id		: decoded Id
+	 * writes a csv file with the following format:
+	 *         tagIdx       : unique sequential id of the tag
+	 *         candidateIdx : sequential id of the candidate per tag
+	 *         gridIdx      : sequential id of the grid/decoding per candidate
+	 *         xpos         : x coordinate of the grid center
+	 *         ypos         : y coordinate of the grid center
+	 *         xRotation    : rotation of the grid in x plane
+	 *         yRotation    : rotation of the grid in y plane
+	 *         zRotation    : rotation of the grid in z plane
+	 *         vote         : candidate score
+	 *         id           : decoded id
 	 *
-	 *	there may be several (possible duplicated) decoded IDs
+	 * there may be several (possible duplicated) decoded IDs
 	 *
 	 * @param taglist
 	 */

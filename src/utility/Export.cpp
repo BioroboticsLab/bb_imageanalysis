@@ -30,23 +30,28 @@ void Export::writeCSV(std::vector<pipeline::Tag> const& taglist, std::string con
 	boost::iostreams::stream_buffer<boost::iostreams::file_sink> buf(path);
 	std::ostream out(&buf);
 
-	boost::format csvLine("%1%,%2%,%3%,%4%,%5%,%6%");
+	boost::format csvLine("%1%,%2%,%3%,%4%,%5%,%6%,%7%,%8%,%9%,%10%");
 
 	for (size_t tagIdx = 0; tagIdx < taglist.size(); ++tagIdx) {
 		pipeline::Tag const& tag = taglist[tagIdx];
 		if (tag.isValid()) {
+			const auto& candidates = tag.getCandidatesConst();
 
-			for (pipeline::TagCandidate const& candidate : tag.getCandidatesConst()) {
+			for (size_t candidateIdx = 0; candidateIdx < candidates.size(); ++candidateIdx) {
+				const pipeline::TagCandidate& candidate = candidates[candidateIdx];
+
 				auto const& decodings = candidate.getDecodings();
 				auto const& grids     = candidate.getGridsConst();
 				assert(grids.size() == decodings.size());
 
-				for (size_t idx = 0; idx < grids.size(); ++idx) {
-					PipelineGrid const& grid             = grids[idx];
-					pipeline::decoding_t const& decoding = decodings[idx];
+				for (size_t gridIdx = 0; gridIdx < grids.size(); ++gridIdx) {
+					PipelineGrid const& grid             = grids[gridIdx];
+					pipeline::decoding_t const& decoding = decodings[gridIdx];
 
-					csvLine % tagIdx % grid.getCenter().x % grid.getCenter().y
-					        % grid.getZRotation() % candidate.getEllipse().getVote()
+					csvLine % tagIdx % candidateIdx % gridIdx
+					        % grid.getCenter().x % grid.getCenter().y
+					        % grid.getXRotation() % grid.getYRotation() % grid.getZRotation()
+					        % candidate.getEllipse().getVote()
 					        % decoding.to_string();
 
 					out << csvLine << std::endl;
