@@ -5,39 +5,33 @@
  *      Author: mareikeziese
  */
 
-#ifndef EXPORT_H_
-#define EXPORT_H_
+#pragma once
 
+#include <string>
 #include <vector>
-#include <src/pipeline/datastructure/Tag.h>
-#include <src/pipeline/datastructure/TagCandidate.h>
-#include <src/pipeline/datastructure/PipelineGrid.h>
-#include <ostream>
-#include <iostream>
-#include <fstream>
-#include <boost/iostreams/device/file.hpp>
-#include <boost/iostreams/stream.hpp>
-#include <boost/archive/binary_oarchive.hpp>
-#include <boost/archive/binary_iarchive.hpp>
-#include <boost/archive/text_oarchive.hpp>
-#include <boost/archive/text_iarchive.hpp>
-#include <boost/archive/xml_iarchive.hpp>
-#include <boost/archive/xml_oarchive.hpp>
-#include <boost/serialization/string.hpp>
-#include <boost/serialization/vector.hpp>
-#include <boost/serialization/split_free.hpp>
 
-
+namespace pipeline {
+class Tag;
+}
 
 class Export {
 public:
-	Export();
-	virtual ~Export();
-	static void writeCSV(std::vector<pipeline::Tag> taglist, std::string exportfile);
-	static void writeSerializedObjects(std::vector<pipeline::Tag> taglist, std::string exportfile);
-	static std::vector<pipeline::Tag> readSerializedObjects(std::string exportfile);
+	/**
+	 *  writes a csv file with the following format:
+	 *			tmp_id 	: temporary Id, to determine, which rows belongs to the same detection
+	 * 			angle   : z- rotation of the Grid
+	 *			x		: x- coordinate of the Grid
+	 *			y		: y- coordinate of the Grid
+	 *			vote	: vote for the TagCandidate
+	 *			id		: decoded Id
+	 *
+	 *	there may be several (possible duplicated) decoded IDs
+	 *
+	 * @param taglist
+	 */
+	static void writeCSV(std::vector<pipeline::Tag> const& taglist, std::string const& path);
 
+	static void writeSerializedObjects(std::vector<pipeline::Tag> const& taglist, std::string const& path);
+
+	static std::vector<pipeline::Tag> readSerializedObjects(std::string const& path);
 };
-
-
-#endif /* EXPORT_H_ */

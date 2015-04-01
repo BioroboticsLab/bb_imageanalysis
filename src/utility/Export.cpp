@@ -5,72 +5,79 @@
  *      Author: mareikeziese
  */
 
-#include <src/utility/Export.h>
+#include "Export.h"
 
-using namespace pipeline;
+#include <iostream>
+#include <fstream>
+#include <ostream>
 
-Export::Export() {
-	// TODO Auto-generated constructor stub
+#include <boost/format.hpp>
+#include <boost/iostreams/device/file.hpp>
+#include <boost/iostreams/stream.hpp>
+//#include <boost/archive/binary_oarchive.hpp>
+//#include <boost/archive/binary_iarchive.hpp>
+//#include <boost/archive/text_oarchive.hpp>
+//#include <boost/archive/text_iarchive.hpp>
+#include <boost/archive/xml_iarchive.hpp>
+#include <boost/archive/xml_oarchive.hpp>
 
-}
+#include <src/pipeline/datastructure/Tag.h>
+#include <src/pipeline/datastructure/TagCandidate.h>
+#include <src/pipeline/datastructure/PipelineGrid.h>
 
-Export::~Export() {
-	// TODO Auto-generated destructor stub
-}
-/**
- *  writes a csv file with the following format:
- *			tmp_id 	: temporary Id, to determine, which rows belongs to the same detection
- *			x		: x- coordinate of ellipse
- *			y		: y-coordinate of the ellipse
- *			vote	: vote for the ellipse
- *			id		: decoded Id
- *
- *	there may be several (possible duplicated ) decoded IDs
- *
- * @param taglist
- */
-void Export::writeCSV(std::vector<Tag> taglist, std::string exportfile) {
-
-	boost::iostreams::stream_buffer<boost::iostreams::file_sink> buf(
-			exportfile);
+void Export::writeCSV(std::vector<pipeline::Tag> const& taglist, std::string const& path)
+{
+	boost::iostreams::stream_buffer<boost::iostreams::file_sink> buf(path);
 	std::ostream out(&buf);
 
-	for (size_t i = 0; i < taglist.size(); i++) {
+	boost::format csvLine("%1%,%2%,%3%,%4%,%5%,%6%");
 
-		Tag tag = taglist[i];
+	for (size_t tagIdx = 0; tagIdx < taglist.size(); ++tagIdx) {
+		pipeline::Tag const& tag = taglist[tagIdx];
 		if (tag.isValid()) {
-			std::vector<TagCandidate>& candidates = tag.getCandidates();
-			for (TagCandidate& candidate : candidates) {
-				for (decoding_t const& decoding : candidate.getDecodings()) {
-					out << i << "," << tag.getBox().x + candidate.getEllipse().getCen().x << ","
-							<< tag.getBox().y + candidate.getEllipse().getCen().y << ","
-							<< candidate.getEllipse().getAngle() << ","
-							<< candidate.getEllipse().getVote() << ","
-							<< decoding.to_string() << std::endl;
+
+			for (pipeline::TagCandidate const& candidate : tag.getCandidatesConst()) {
+				auto const& decodings = candidate.getDecodings();
+				auto const& grids     = candidate.getGridsConst();
+				assert(grids.size() == decodings.size());
+
+				for (size_t idx = 0; idx < grids.size(); ++idx) {
+					PipelineGrid const& grid             = grids[idx];
+					pipeline::decoding_t const& decoding = decodings[idx];
+
+					csvLine % tagIdx % grid.getCenter().x % grid.getCenter().y
+					        % grid.getZRotation() % candidate.getEllipse().getVote()
+					        % decoding.to_string();
+
+					out << csvLine << std::endl;
 				}
 			}
 		}
-
 	}
 }
 
-void Export::writeSerializedObjects(std::vector<pipeline::Tag> taglist,
-		std::string exportfile) {
-	std::ofstream ofs(exportfile);
-	//boost::archive::text_oarchive oa(ofs);
-	boost::archive::xml_oarchive oa(ofs);
+void Export::writeSerializedObjects(const std::vector<pipeline::Tag> &taglist,
+                                    const std::string &path)
+{
+	std::ofstream ofs(path);
+
+//	boost::archive::text_oarchive oa(ofs);
 //	boost::archive::binary_oarchive oa(ofs);
+	boost::archive::xml_oarchive oa(ofs);
+
 	oa & BOOST_SERIALIZATION_NVP(taglist);
 }
 
-std::vector<pipeline::Tag> Export::readSerializedObjects(
-		std::string exportfile) {
-	std::vector<pipeline::Tag> taglist = std::vector<pipeline::Tag>();
-	std::ifstream ifs(exportfile);
-	//boost::archive::text_oarchive oa(ofs);
-	boost::archive::xml_iarchive ia(ifs);
+std::vector<pipeline::Tag> Export::readSerializedObjects(const std::string &path)
+{
+	std::ifstream ifs(path);
+
+//	boost::archive::text_oarchive oa(ofs);
 //	boost::archive::binary_iarchive ia(ifs);
+	boost::archive::xml_iarchive ia(ifs);
+
+	std::vector<pipeline::Tag> taglist;
 	ia & BOOST_SERIALIZATION_NVP(taglist);
+
 	return taglist;
 }
-
