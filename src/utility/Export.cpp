@@ -42,8 +42,8 @@ void Export::writeCSV(std::vector<Tag> taglist, std::string exportfile) {
 			std::vector<TagCandidate>& candidates = tag.getCandidates();
 			for (TagCandidate& candidate : candidates) {
 				for (decoding_t const& decoding : candidate.getDecodings()) {
-					out << i << "," << candidate.getEllipse().getCen().x << ","
-							<< candidate.getEllipse().getCen().y << ","
+					out << i << "," << tag.getBox().x + candidate.getEllipse().getCen().x << ","
+							<< tag.getBox().y + candidate.getEllipse().getCen().y << ","
 							<< candidate.getEllipse().getAngle() << ","
 							<< candidate.getEllipse().getVote() << ","
 							<< decoding.to_string() << std::endl;
