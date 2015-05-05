@@ -11,6 +11,7 @@
 #include <fstream>
 #include <ostream>
 
+#include <boost/serialization/access.hpp>
 #include <boost/format.hpp>
 #include <boost/iostreams/device/file.hpp>
 #include <boost/iostreams/stream.hpp>
@@ -82,7 +83,8 @@ std::vector<pipeline::Tag> Export::readSerializedObjects(const std::string &path
 	boost::archive::xml_iarchive ia(ifs);
 
 	std::vector<pipeline::Tag> taglist;
-	ia & BOOST_SERIALIZATION_NVP(taglist);
+	// TODO FIXME!
+	//ia & BOOST_SERIALIZATION_NVP(taglist);
 
 	return taglist;
 }
