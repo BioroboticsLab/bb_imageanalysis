@@ -1,11 +1,21 @@
-file(GLOB_RECURSE src RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} *.cpp)
-file(GLOB_RECURSE hdr RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} *.h)
+file(GLOB_RECURSE pipeline-src RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} *.cpp)
+file(GLOB_RECURSE pipeline-hdr RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} *.h)
+file(GLOB src RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} *.cpp)
+file(GLOB hdr RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} *.h)
+
+list(REMOVE_ITEM pipeline-src ${src})
+list(REMOVE_ITEM pipeline-hdr ${hdr})
+
+add_library(pipeline STATIC
+    ${pipeline-src} ${pipeline-hdr}
+)
 
 add_executable(bb_imganalysis
     ${src} ${hdr}
 )
  
 target_link_libraries(bb_imganalysis
+    pipeline
     ${OpenCV_LIBS}
     ${Boost_LIBRARIES}
     ${MPI_CXX_LIBRARIES}

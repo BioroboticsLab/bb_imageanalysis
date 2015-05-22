@@ -80,3 +80,4 @@ add_definitions(-DPipelineStandalone)
 add_definitions(-DBOOST_LOG_DYN_LINK)
 
 add_subdirectory(src)
+add_subdirectory(test)
