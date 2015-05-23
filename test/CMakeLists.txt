@@ -13,4 +13,5 @@ target_link_libraries(run-tests
     ${OpenCV_LIBS}
     ${Boost_LIBRARIES}
     ${MPI_CXX_LIBRARIES}
+    ${CMAKE_THREAD_LIBS_INIT}
 )

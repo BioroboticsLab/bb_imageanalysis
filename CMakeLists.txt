@@ -5,8 +5,9 @@ project(bb_imganalysis)
 # project dependecies
 
 find_package(OpenCV REQUIRED)
-find_package(Boost COMPONENTS filesystem serialization system log log_setup thread date_time  REQUIRED) 
+find_package(Boost COMPONENTS filesystem serialization system log log_setup thread date_time REQUIRED)
 find_package(MPI REQUIRED)
+find_package(Threads REQUIRED)
 
 # remove all previously set compiler and linker flags
 set(CMAKE_CXX_FLAGS "")
