@@ -10,16 +10,19 @@ add_library(pipeline STATIC
     ${pipeline-src} ${pipeline-hdr}
 )
 
+target_link_libraries(pipeline
+    ${OpenCV_LIBS}
+    ${Boost_LIBRARIES}
+    ${MPI_CXX_LIBRARIES}
+    ${CMAKE_THREAD_LIBS_INIT}
+)
+
 add_executable(bb_imganalysis
     ${src} ${hdr}
 )
  
 target_link_libraries(bb_imganalysis
     pipeline
-    ${OpenCV_LIBS}
-    ${Boost_LIBRARIES}
-    ${MPI_CXX_LIBRARIES}
-    ${CMAKE_THREAD_LIBS_INIT}
 )
 
 # add files to source groups to preserve folder structure in visual studio

@@ -10,8 +10,4 @@ add_executable(run-tests
  
 target_link_libraries(run-tests
     pipeline
-    ${OpenCV_LIBS}
-    ${Boost_LIBRARIES}
-    ${MPI_CXX_LIBRARIES}
-    ${CMAKE_THREAD_LIBS_INIT}
 )
