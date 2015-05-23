@@ -19,6 +19,7 @@ target_link_libraries(bb_imganalysis
     ${OpenCV_LIBS}
     ${Boost_LIBRARIES}
     ${MPI_CXX_LIBRARIES}
+    ${CMAKE_THREAD_LIBS_INIT}
 )
 
 # add files to source groups to preserve folder structure in visual studio
