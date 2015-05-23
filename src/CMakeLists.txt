@@ -11,10 +11,10 @@ add_library(pipeline STATIC
 )
 
 target_link_libraries(pipeline
+    ${CMAKE_THREAD_LIBS_INIT}
     ${OpenCV_LIBS}
     ${Boost_LIBRARIES}
     ${MPI_CXX_LIBRARIES}
-    ${CMAKE_THREAD_LIBS_INIT}
 )
 
 add_executable(bb_imganalysis
