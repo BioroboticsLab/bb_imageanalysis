@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 2.6)
 
+cmake_policy(SET CMP0012 NEW)
+
 project(bb_imganalysis)
 
 # project dependecies
@@ -48,12 +50,12 @@ endif()
 
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
   if ("${CMAKE_BUILD_TYPE}" STREQUAL "Release")
-    set(CMAKE_CXX_FLAGS_RELEASE "-Ofast -DNDEBUG -march=native -pipe -fPIC -std=c++1y -ffast-math -flto -funroll-loops -fpeel-loops")
+    set(CMAKE_CXX_FLAGS_RELEASE "-Ofast -DNDEBUG -march=native -pipe -fPIC -std=c++1y -ffast-math -funroll-loops -fpeel-loops")
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_CXX_FLAGS_RELEASE}")
   endif()
 
   if ("${CMAKE_BUILD_TYPE}" STREQUAL "RelWithDebInfo")
-    set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-Ofast -ggdb -DNDEBUG -march=native -pipe -fPIC -std=c++1y -ffast-math -flto -funroll-loops -fpeel-loops")
+    set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-Ofast -ggdb -DNDEBUG -march=native -pipe -fPIC -std=c++1y -ffast-math -funroll-loops -fpeel-loops")
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_CXX_FLAGS_RELWITHDEBINFO}")
   endif()
 endif()
@@ -65,6 +67,12 @@ if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang" AND
   set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=address")
   set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=undefined")
   set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=integer")
+endif()
+
+option(ENABLE_LTO "ENABLE_LTO" ON)
+if(${ENABLE_LTO})
+  set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -flto")
+  set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} -flto")
 endif()
 
 set(Boost_USE_MULTITHREADED OFF)
