@@ -6,7 +6,7 @@ file(GLOB hdr RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} *.h)
 list(REMOVE_ITEM pipeline-src ${src})
 list(REMOVE_ITEM pipeline-hdr ${hdr})
 
-add_library(pipeline STATIC
+add_library(pipeline SHARED
     ${pipeline-src} ${pipeline-hdr}
 )
 
