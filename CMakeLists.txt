@@ -168,3 +168,4 @@ include_directories(
 )
 
 add_subdirectory(bb_imganalysis)
+add_subdirectory(test)
