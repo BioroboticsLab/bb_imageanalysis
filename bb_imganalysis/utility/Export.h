@@ -1,10 +1,3 @@
-/*
- * Export.h
- *
- *  Created on: 30.03.2015
- *      Author: mareikeziese
- */
-
 #pragma once
 
 #include <string>

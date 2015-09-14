@@ -1,10 +1,3 @@
-/*
- * DecodingProcess.h
- *
- *  Created on: 21.08.2014
- *      Author: mareikeziese
- */
-
 #ifndef DECODINGPROCESS_H_
 #define DECODINGPROCESS_H_
 

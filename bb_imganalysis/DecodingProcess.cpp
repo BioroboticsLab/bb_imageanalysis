@@ -1,10 +1,3 @@
-/*
- * DecodingProcess.cpp
- *
- *  Created on: 21.08.2014
- *      Author: mareikeziese
- */
-
 #include "DecodingProcess.h"
 
 #include <mpi.h>
@@ -37,6 +30,7 @@
 #endif
 
 using namespace boost::filesystem;
+using namespace std;
 
 namespace {
 class MeasureTimeRAII {

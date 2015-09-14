@@ -1,10 +1,3 @@
-/*
- * Export.cpp
- *
- *  Created on: 30.03.2015
- *      Author: mareikeziese
- */
-
 #include "Export.h"
 
 #include <iostream>
@@ -22,9 +15,9 @@
 #include <boost/archive/xml_iarchive.hpp>
 #include <boost/archive/xml_oarchive.hpp>
 
-#include <src/pipeline/datastructure/Tag.h>
-#include <src/pipeline/datastructure/TagCandidate.h>
-#include <src/pipeline/datastructure/PipelineGrid.h>
+#include <pipeline/datastructure/Tag.h>
+#include <pipeline/datastructure/TagCandidate.h>
+#include <pipeline/datastructure/PipelineGrid.h>
 
 void Export::writeCSV(std::vector<pipeline::Tag> const& taglist, std::string const& path)
 {
