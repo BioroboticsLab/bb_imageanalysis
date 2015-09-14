@@ -16,12 +16,6 @@
 
 #include <opencv2/opencv.hpp>
 
-#include <pipeline/Preprocessor.h>
-#include <pipeline/Localizer.h>
-#include <pipeline/EllipseFitter.h>
-#include <pipeline/GridFitter.h>
-#include <pipeline/Decoder.h>
-
 #include "utility/Logger.h"
 #include "utility/Export.h"
 
@@ -83,13 +77,32 @@ void DecodingProcess::loadMetaInfos(const std::string &filename) {
     std::cout << "camera id " << timestring << std::endl;
 }
 
-void DecodingProcess::process(std::string const& filename) const {
-    pipeline::Preprocessor preprocessor;
-    pipeline::Localizer localizer;
-    pipeline::EllipseFitter ellipseFitter;
-    pipeline::GridFitter gridFitter;
-    pipeline::Decoder decoder;
+DecodingProcess::DecodingProcess(const std::string &settingsPath)
+{
+    pipeline::settings::preprocessor_settings_t preprocessor_settings;
+    pipeline::settings::localizer_settings_t localizer_settings;
+    pipeline::settings::ellipsefitter_settings_t ellipsefitter_settings;
+    pipeline::settings::gridfitter_settings_t gridfitter_settings;
 
+    for (pipeline::settings::settings_abs* settings :
+         std::array<pipeline::settings::settings_abs*, 4>({&preprocessor_settings,
+                                                          &localizer_settings,
+                                                          &ellipsefitter_settings,
+                                                          &gridfitter_settings}))
+    {
+        settings->loadFromJson(settingsPath);
+    }
+
+    // TODO: don't use deeplocalizer for now
+    localizer_settings.setValue(pipeline::settings::Localizer::Params::DEEPLOCALIZER_FILTER, false);
+
+    _preprocessor.loadSettings(preprocessor_settings);
+    _localizer.loadSettings(localizer_settings);
+    _ellipseFitter.loadSettings(ellipsefitter_settings);
+    _gridFitter.loadSettings(gridfitter_settings);
+}
+
+void DecodingProcess::process(std::string const& filename) {
     cv::Mat img = cv::imread(filename, CV_LOAD_IMAGE_GRAYSCALE);
 
     cv::Mat preprocessedImg;
@@ -103,7 +116,7 @@ void DecodingProcess::process(std::string const& filename) const {
     {
         try {
             MeasureTimeRAII measure("Preprocessor");
-            preprocessedImg = preprocessor.process(img);
+            preprocessedImg = _preprocessor.process(img);
 
         } catch (const std::exception & e) {
             ss << "Error on Preprocessor: " << e.what() << " stop processing.";
@@ -115,7 +128,7 @@ void DecodingProcess::process(std::string const& filename) const {
     {
         try {
             MeasureTimeRAII measure("Localizer");
-            taglist = localizer.process(std::move(img), std::move(preprocessedImg));
+            taglist = _localizer.process(std::move(img), std::move(preprocessedImg));
 
 #ifdef DEBUG_PROGRAM
             // shorten result for faster debugging
@@ -137,7 +150,7 @@ void DecodingProcess::process(std::string const& filename) const {
     {
         try {
             MeasureTimeRAII measure("EllipseFitter");
-            taglist = ellipseFitter.process(std::move(taglist));
+            taglist = _ellipseFitter.process(std::move(taglist));
         } catch (const std::exception & e) {
             ss << "Error on EllipseFitter: " << e.what() << " stop processing.";
             std::cout << ss.str();
@@ -148,7 +161,7 @@ void DecodingProcess::process(std::string const& filename) const {
     {
         try {
             MeasureTimeRAII measure("GridFitter");
-            taglist = gridFitter.process(std::move(taglist));
+            taglist = _gridFitter.process(std::move(taglist));
         } catch (const std::exception & e) {
             ss << "Error on GridFitter: " << e.what() << " stop processing.";
             std::cout << ss.str();
@@ -159,7 +172,7 @@ void DecodingProcess::process(std::string const& filename) const {
     {
         try {
             MeasureTimeRAII measure("Decoder");
-            taglist = decoder.process(std::move(taglist));
+            taglist = _decoder.process(std::move(taglist));
         } catch (const std::exception & e) {
 
             ss << "Error on Decoder: " << e.what() << " stop processing.";
@@ -258,9 +271,13 @@ int main(int argc, char** argv) {
     // create a list of the files this process has to analyse
     vector<std::string> imageFiles;
     if (argc <= 1) {
-        std::cerr << "directory is missing" << std::endl;
-        return 1;
+        std::cerr << "directory and settings path are missing" << std::endl;
+        return EXIT_FAILURE;
+    } else if (argc <= 2) {
+        std::cerr << "settings path is missing" << std::endl;
+        return EXIT_FAILURE;
     }
+
     char* directoryName = argv[1];
     Logger::init(directoryName);
     Logger::log(std::stringstream().flush() << "start decoder process on folder "<< directoryName,severity_level::notification);
@@ -277,7 +294,7 @@ int main(int argc, char** argv) {
                     std::stringstream().flush() << "directory " << directoryName
                     << " empty. shutdown process",
                     severity_level::notification);
-        return 0;
+        return EXIT_SUCCESS;
     }
 
     Logger::log(
@@ -285,7 +302,14 @@ int main(int argc, char** argv) {
                 << "images ..",severity_level::notification);
     cout << "I have to work on " << imageCount << " images." << endl;
 
-    DecodingProcess dprocess = DecodingProcess();
+    std::string settingsFilePath(argv[2]);
+
+    if (!boost::filesystem::is_regular_file(settingsFilePath)) {
+        std::cerr << "settings file does not exist" << std::endl;
+        return EXIT_FAILURE;
+    }
+
+    DecodingProcess dprocess(settingsFilePath);
 
     for (unsigned int imageNumber = 0; imageNumber < imageCount;
          ++imageNumber) {
@@ -307,7 +331,7 @@ int main(int argc, char** argv) {
         cout << "Overall job time: " << endl;
     }
 #endif
-    return 0;
+    return EXIT_SUCCESS;
 }
 
 time_t seconds_from_epoch(const string &s)
