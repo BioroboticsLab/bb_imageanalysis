@@ -1,24 +1,29 @@
 #include "DecodingProcess.h"
 
-#include <mpi.h>
-#include <fstream>
-#include <stdio.h>
-#include <unistd.h>
-#include <chrono>
+#include <cstdio>
 #include <cstdlib>
+#include <chrono>
+#include <fstream>
 #include <iostream>
 
+#include <unistd.h>
 #include <dirent.h>
 #include <sys/resource.h>
 
+#include <mpi.h>
+
+#include <boost/filesystem.hpp>
+
 #include <opencv2/opencv.hpp>
 
-#include "pipeline/Preprocessor.h"
-#include "pipeline/Localizer.h"
-#include "pipeline/EllipseFitter.h"
-#include "pipeline/GridFitter.h"
-#include "pipeline/Decoder.h"
-#include <boost/filesystem.hpp>
+#include <pipeline/Preprocessor.h>
+#include <pipeline/Localizer.h>
+#include <pipeline/EllipseFitter.h>
+#include <pipeline/GridFitter.h>
+#include <pipeline/Decoder.h>
+
+#include "utility/Logger.h"
+#include "utility/Export.h"
 
 //#define DEBUG_PROGRAM
 
@@ -32,296 +37,299 @@
 using namespace boost::filesystem;
 using namespace std;
 
+namespace bt = boost::posix_time;
+
 namespace {
 class MeasureTimeRAII {
 public:
-	MeasureTimeRAII(std::string const& what) :
-			_start(std::chrono::steady_clock::now()), _what(what) {
-	}
-	~MeasureTimeRAII() {
-		std::chrono::steady_clock::time_point end =
-				std::chrono::steady_clock::now();
-		std::cout << _what << " took "
+    MeasureTimeRAII(std::string const& what) :
+        _start(std::chrono::steady_clock::now()), _what(what) {
+    }
+    ~MeasureTimeRAII() {
+        std::chrono::steady_clock::time_point end =
+                std::chrono::steady_clock::now();
+        std::cout << _what << " took "
 
-				<< std::chrono::duration_cast<std::chrono::milliseconds>(
-						end - _start).count() << "ms.\n";
-		Logger::log(
-				std::stringstream().flush() << _what << " took "
-						<< std::chrono::duration_cast<std::chrono::milliseconds>(
-								end - _start).count() << "ms.",
-				severity_level::normal);
-	}
+                  << std::chrono::duration_cast<std::chrono::milliseconds>(
+                         end - _start).count() << "ms.\n";
+        Logger::log(
+                    std::stringstream().flush() << _what << " took "
+                    << std::chrono::duration_cast<std::chrono::milliseconds>(
+                        end - _start).count() << "ms.",
+                    severity_level::normal);
+    }
 private:
-	std::chrono::steady_clock::time_point _start;
-	std::string _what;
+    std::chrono::steady_clock::time_point _start;
+    std::string _what;
 };
 
+const std::locale formats[] = {
+    std::locale(std::locale::classic(),new bt::time_input_facet("%Y%m%d%H%M%S"))
+};
+
+const size_t formats_n = sizeof(formats)/sizeof(formats[0]);
 }
 
-void DecodingProcess::_loadMetaInfos(const std::string &filename) {
+void DecodingProcess::loadMetaInfos(const std::string &filename) {
 
-	this->meta_infos.camera_id = boost::lexical_cast<unsigned int>(
-			filename.substr(4, 1));
-	std::cout << "camera id " << this->meta_infos.camera_id << std::endl;
+    this->_meta_infos.camera_id = boost::lexical_cast<unsigned int>(
+                filename.substr(4, 1));
+    std::cout << "camera id " << this->_meta_infos.camera_id << std::endl;
 
-	Logger::log(
-			std::stringstream().flush() << "identificate camera id = "
-					<< this->meta_infos.camera_id,severity_level::normal);
-	std::string timestring = filename.substr(6, 14);
-	std::cout << "camera id " << timestring << std::endl;
+    Logger::log(
+                std::stringstream().flush() << "identificate camera id = "
+                << this->_meta_infos.camera_id,severity_level::normal);
+    std::string timestring = filename.substr(6, 14);
+    std::cout << "camera id " << timestring << std::endl;
 }
 
 void DecodingProcess::process(std::string const& filename) const {
-	pipeline::Preprocessor preprocessor;
-	pipeline::Localizer localizer;
-	pipeline::EllipseFitter ellipseFitter;
-	pipeline::GridFitter gridFitter;
-	pipeline::Decoder decoder;
+    pipeline::Preprocessor preprocessor;
+    pipeline::Localizer localizer;
+    pipeline::EllipseFitter ellipseFitter;
+    pipeline::GridFitter gridFitter;
+    pipeline::Decoder decoder;
 
     cv::Mat img = cv::imread(filename, CV_LOAD_IMAGE_GRAYSCALE);
 
     cv::Mat preprocessedImg;
-	std::vector<pipeline::Tag> taglist;
-	std::vector<pipeline::Tag> taglist2;
-
-	std::stringstream ss;
-	{
-
-		try {
-			MeasureTimeRAII measure("Preprocessor");
-			preprocessedImg = preprocessor.process(img);
-
-		} catch (const std::exception & e) {
-			ss << "Error on Preprocessor: " << e.what() << " stop processing.";
-			std::cout << ss.str();
-			Logger::log(ss,severity_level::critical);
-			return;
-		}
-	}
-	{
-		try {
-			MeasureTimeRAII measure("Localizer");
-			taglist = localizer.process(std::move(img),
-					std::move(preprocessedImg));
+    std::vector<pipeline::Tag> taglist;
 
 #ifdef DEBUG_PROGRAM
-
-			// shorten result for faster debugging
-			size_t i = 0;
-			while(i < 10 && i < taglist.size()){
-				taglist2.push_back(taglist[i]);
-				i++;
-			}
-			taglist = taglist2;
+    std::vector<pipeline::Tag> taglist_reduced;
 #endif
 
-		} catch (const std::exception & e) {
-			ss << "Error on Localizer: " << e.what() << " stop processing.";
-			std::cout << ss.str();
-			Logger::log(ss,severity_level::critical);
-			return;
-		}
-	}
-	{
-		try {
-			MeasureTimeRAII measure("EllipseFitter");
-			taglist = ellipseFitter.process(std::move(taglist));
-		} catch (const std::exception & e) {
-			ss << "Error on EllipseFitter: " << e.what() << " stop processing.";
-			std::cout << ss.str();
-			Logger::log(ss,severity_level::critical);
-			return;
-		}
-	}
-	{
-		try {
-			MeasureTimeRAII measure("GridFitter");
-			taglist = gridFitter.process(std::move(taglist));
-		} catch (const std::exception & e) {
-			ss << "Error on GridFitter: " << e.what() << " stop processing.";
-			std::cout << ss.str();
-			Logger::log(ss,severity_level::critical);
-			return;
-		}
-	}
-	{
-		try {
-			MeasureTimeRAII measure("Decoder");
-			taglist = decoder.process(std::move(taglist));
-		} catch (const std::exception & e) {
+    std::stringstream ss;
+    {
+        try {
+            MeasureTimeRAII measure("Preprocessor");
+            preprocessedImg = preprocessor.process(img);
 
-			ss << "Error on Decoder: " << e.what() << " stop processing.";
-			std::cout << ss.str();
-			Logger::log(ss,severity_level::critical);
-			return;
-		}
-	}
+        } catch (const std::exception & e) {
+            ss << "Error on Preprocessor: " << e.what() << " stop processing.";
+            std::cout << ss.str();
+            Logger::log(ss,severity_level::critical);
+            return;
+        }
+    }
+    {
+        try {
+            MeasureTimeRAII measure("Localizer");
+            taglist = localizer.process(std::move(img), std::move(preprocessedImg));
 
-	using namespace pipeline;
+#ifdef DEBUG_PROGRAM
+            // shorten result for faster debugging
+            size_t i = 0;
+            while(i < 10 && i < taglist.size()){
+                taglist_reduced.push_back(taglist[i]);
+                i++;
+            }
+            taglist = taglist_reduced;
+#endif
 
-	path p (filename);
-	Export ex = Export();
-	ex.writeCSV(taglist, p.parent_path().string()+"/"+p.stem().string()+".csv");
-	ex.writeSerializedObjects(taglist, p.parent_path().string()+"/"+p.stem().string()+".dat");
-	/*std::vector<pipeline::Tag> new_taglist  = ex.readSerializedObjects( p.parent_path().string()+"/"+p.stem().string()+".dat");
+        } catch (const std::exception & e) {
+            ss << "Error on Localizer: " << e.what() << " stop processing.";
+            std::cout << ss.str();
+            Logger::log(ss,severity_level::critical);
+            return;
+        }
+    }
+    {
+        try {
+            MeasureTimeRAII measure("EllipseFitter");
+            taglist = ellipseFitter.process(std::move(taglist));
+        } catch (const std::exception & e) {
+            ss << "Error on EllipseFitter: " << e.what() << " stop processing.";
+            std::cout << ss.str();
+            Logger::log(ss,severity_level::critical);
+            return;
+        }
+    }
+    {
+        try {
+            MeasureTimeRAII measure("GridFitter");
+            taglist = gridFitter.process(std::move(taglist));
+        } catch (const std::exception & e) {
+            ss << "Error on GridFitter: " << e.what() << " stop processing.";
+            std::cout << ss.str();
+            Logger::log(ss,severity_level::critical);
+            return;
+        }
+    }
+    {
+        try {
+            MeasureTimeRAII measure("Decoder");
+            taglist = decoder.process(std::move(taglist));
+        } catch (const std::exception & e) {
 
-	// remove invalid tags
-	new_taglist.erase(
-			std::remove_if(new_taglist.begin(), new_taglist.end(),
-					[](Tag& tag) {return !tag.isValid();}), new_taglist.end());
-	std::cout << std::endl << new_taglist.size() << " Tags gefunden" << std::endl
-			<< std::endl;
-	for (Tag& tag : new_taglist) {
-		std::cout << "Tag: " << std::endl;
-		vector<TagCandidate>& candidates = tag.getCandidates();
-		std::cout << "\t" << candidates.size() << " Kandidaten " << std::endl;
-		for (TagCandidate& candidate : candidates) {
-			std::cout << "\tKandidat: " << std::endl;
-			std::cout << "\t\tEllipsenscore "
-					<< candidate.getEllipse().getVote() << ":" << std::endl;
-			for (decoding_t const& decoding : candidate.getDecodings()) {
-				std::cout << "\t\tDecoding :" << endl;
-				std::cout << "\t\t\tId " << decoding.to_string() << std::endl;
-			}
-		}
-	}*/
+            ss << "Error on Decoder: " << e.what() << " stop processing.";
+            std::cout << ss.str();
+            Logger::log(ss,severity_level::critical);
+            return;
+        }
+    }
+
+    using namespace pipeline;
+    path p (filename);
+    Export ex = Export();
+    ex.writeCSV(taglist, p.parent_path().string()+"/"+p.stem().string()+".csv");
+    ex.writeSerializedObjects(taglist, p.parent_path().string()+"/"+p.stem().string()+".dat");
 }
 
 
 
 bool checkValidFilename(const string& filename) {
+    //check if filename is given
+    if (filename.size() == 0) {
+        return false;
+    }
 
-	//check if filename is given
-	if (filename.size() == 0) {
-		return false;
-	}
-
-	path p(filename);
-
-	//check if file has the right extension
-	if (p.extension().string() == ".png" || p.extension().string() == ".jpeg") {
-		return true;
-	}
-	return false;
+    path p(filename);
+    //check if file has the right extension
+    if (p.extension().string() == ".png" || p.extension().string() == ".jpeg") {
+        return true;
+    }
+    return false;
 }
 
 void listImagesCray( const char *directoryName, vector< std::string > &imageFiles, int world_rank ) {
-	std::string path = std::string( directoryName ) + "/" + "proc_" + to_string(static_cast<long>(world_rank)) + "/";
-	DIR *directory = opendir( path.c_str( ));
-	struct dirent *file;
-	while( ( file = readdir( directory )) ) {
-		if (( file->d_type & DT_DIR )) { // directories are uninteresting
-			continue;
-		}		// here be file..
-		
-		std::string filename = path + file->d_name;
-		if (checkValidFilename(filename)) {
-			imageFiles.push_back(filename);
-		} else {
-			Logger::log(
-					std::stringstream().flush() << "ignoring file " << filename,
-					severity_level::warning);
-		}
-	}
-	closedir( directory );
+    std::string path = std::string( directoryName ) + "/" + "proc_" + to_string(static_cast<long>(world_rank)) + "/";
+    DIR *directory = opendir( path.c_str( ));
+    struct dirent *file;
+    while( ( file = readdir( directory )) ) {
+        if (( file->d_type & DT_DIR )) { // directories are uninteresting
+            continue;
+        } // here be file..
+
+        std::string filename = path + file->d_name;
+        if (checkValidFilename(filename)) {
+            imageFiles.push_back(filename);
+        } else {
+            Logger::log(
+                        std::stringstream().flush() << "ignoring file " << filename,
+                        severity_level::warning);
+        }
+    }
+    closedir( directory );
 }
 
 void listImagesDebug(const char *directoryName,	vector<std::string> &imageFiles) {
-	//std::string path = std::string(directoryName);	
-	std::string path = std::string(directoryName)+ "/" + "proc_0" + "/";	
-	DIR *directory = opendir(path.c_str());
-	struct dirent *file;
-	while ((file = readdir(directory))) {
-		if ((file->d_type & DT_DIR)) { // directories are uninteresting
-			continue;
-		}		// here be file..
+    std::string path = std::string(directoryName)+ "/" + "proc_0" + "/";
+    DIR *directory = opendir(path.c_str());
+    struct dirent *file;
+    while ((file = readdir(directory))) {
+        if ((file->d_type & DT_DIR)) { // directories are uninteresting
+            continue;
+        } // here be file..
 
-		std::string filename = path + file->d_name;
-		if (checkValidFilename(filename)) {
-			imageFiles.push_back(filename);
-		} else {
-			Logger::log(
-					std::stringstream().flush() << "ignoring file " << filename,
-					severity_level::warning);
-		}
-	}
-	closedir(directory);
+        std::string filename = path + file->d_name;
+        if (checkValidFilename(filename)) {
+            imageFiles.push_back(filename);
+        } else {
+            Logger::log(
+                        std::stringstream().flush() << "ignoring file " << filename,
+                        severity_level::warning);
+        }
+    }
+    closedir(directory);
 }
 
 int main(int argc, char** argv) {
     // enable core dumps on crash
-	static const __rlim_t infinity =  static_cast<__rlim_t>(-1);
+    static const __rlim_t infinity =  static_cast<__rlim_t>(-1);
     rlimit core_limit = { infinity, infinity };
     setrlimit( RLIMIT_CORE, &core_limit );
 
-	// The MPI stuff to identify each process
+    // The MPI stuff to identify each process
 #ifdef CRAY
-	MPI_Init( NULL, NULL );
-	int world_size;
-	int world_rank;
-	
-	// Get the number of processes
-	MPI_Comm_size( MPI_COMM_WORLD, &world_size );
-	// Get the rank of the process
-	MPI_Comm_rank( MPI_COMM_WORLD, &world_rank );
-	if ( world_rank == 0 ) {
-		cout << "There are " + to_string( (long long) world_size ) + " processes working." << endl;		
-	}
+    MPI_Init( NULL, NULL );
+    int world_size;
+    int world_rank;
+
+    // Get the number of processes
+    MPI_Comm_size( MPI_COMM_WORLD, &world_size );
+    // Get the rank of the process
+    MPI_Comm_rank( MPI_COMM_WORLD, &world_rank );
+    if ( world_rank == 0 ) {
+        cout << "There are " + to_string( (long long) world_size ) + " processes working." << endl;
+    }
 #endif
-	
-	// create a list of the files this process has to analyse
-	vector<std::string> imageFiles;
-	if (argc <= 1) {
-		std::cerr << "directory is missing" << std::endl;
-		return 1;
-	}
-	char* directoryName = argv[1];
-	Logger::init(directoryName);
-	Logger::log(std::stringstream().flush() << "start decoder process on folder "<< directoryName,severity_level::notification);
+
+    // create a list of the files this process has to analyse
+    vector<std::string> imageFiles;
+    if (argc <= 1) {
+        std::cerr << "directory is missing" << std::endl;
+        return 1;
+    }
+    char* directoryName = argv[1];
+    Logger::init(directoryName);
+    Logger::log(std::stringstream().flush() << "start decoder process on folder "<< directoryName,severity_level::notification);
 #ifdef CRAY
-	listImagesCray( directoryName, imageFiles, world_rank );
+    listImagesCray( directoryName, imageFiles, world_rank );
 #else	
-	listImagesDebug(directoryName, imageFiles);
+    listImagesDebug(directoryName, imageFiles);
 #endif
 
-	unsigned int imageCount = imageFiles.size();
-	if (imageCount == 0) {
-		cout << "no work found. shutdown" << endl;
-		Logger::log(
-				std::stringstream().flush() << "directory " << directoryName
-						<< " empty. shutdown process",
-				severity_level::notification);
-		return 0;
-	}
+    unsigned int imageCount = imageFiles.size();
+    if (imageCount == 0) {
+        cout << "no work found. shutdown" << endl;
+        Logger::log(
+                    std::stringstream().flush() << "directory " << directoryName
+                    << " empty. shutdown process",
+                    severity_level::notification);
+        return 0;
+    }
 
-	Logger::log(
-			std::stringstream().flush() << "start processing " << imageCount
-					<< "images ..",severity_level::notification);
-	cout << "I have to work on " << imageCount << " images." << endl;
+    Logger::log(
+                std::stringstream().flush() << "start processing " << imageCount
+                << "images ..",severity_level::notification);
+    cout << "I have to work on " << imageCount << " images." << endl;
 
-	DecodingProcess dprocess = DecodingProcess();
+    DecodingProcess dprocess = DecodingProcess();
 
-	for (unsigned int imageNumber = 0; imageNumber < imageCount;
-			++imageNumber) {
-		cout << "process works on image " << imageFiles[imageNumber] << endl;
-		Logger::log(
-				std::stringstream().flush() << "process works on image "
-						<< imageFiles[imageNumber],
-				severity_level::notification);
-		dprocess.process(imageFiles[imageNumber]);
-		// After processing the image it is deleted to signalize that the processing was completed.
-		// If the image is not deleted, it will be analyzed again.
-		if (::remove(std::string(imageFiles[imageNumber]).c_str()) != 0)
-			perror("Error deleting the image ");
-	}
+    for (unsigned int imageNumber = 0; imageNumber < imageCount;
+         ++imageNumber) {
+        cout << "process works on image " << imageFiles[imageNumber] << endl;
+        Logger::log(
+                    std::stringstream().flush() << "process works on image "
+                    << imageFiles[imageNumber],
+                    severity_level::notification);
+        dprocess.process(imageFiles[imageNumber]);
+        // After processing the image it is deleted to signalize that the processing was completed.
+        // If the image is not deleted, it will be analyzed again.
+        if (::remove(std::string(imageFiles[imageNumber]).c_str()) != 0)
+            perror("Error deleting the image ");
+    }
 #ifdef CRAY
-	// make sure all processes finished 
-	MPI_Finalize( );
-	if ( world_rank == 0 ) {
-		cout << "Overall job time: " << endl;	
-	}
+    // make sure all processes finished
+    MPI_Finalize( );
+    if ( world_rank == 0 ) {
+        cout << "Overall job time: " << endl;
+    }
 #endif
-	return 0;
+    return 0;
+}
+
+time_t seconds_from_epoch(const string &s)
+{
+    bt::ptime pt;
+    for(size_t i=0; i<formats_n; ++i)
+    {
+        std::istringstream is(s);
+        is.imbue(formats[i]);
+        is >> pt;
+        if(pt != bt::ptime()) break;
+    }
+    std::cout << " ptime is " << pt << '\n';
+    std::cout << " seconds from epoch are " << pt_to_time_t(pt) << '\n';
+    return  pt_to_time_t(pt) ;
+}
+
+time_t pt_to_time_t(const boost::posix_time::ptime &pt)
+{
+    bt::ptime timet_start(boost::gregorian::date(1970,1,1));
+    bt::time_duration diff = pt - timet_start;
+    return diff.ticks()/bt::time_duration::rep_type::ticks_per_second;
 }
 
 #if defined(CRAY) && (defined(__GNUC__) || defined(__clang__))
