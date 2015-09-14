@@ -4,12 +4,17 @@ cmake_policy(SET CMP0012 NEW)
 
 project(bb_imganalysis)
 
+set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/ ${CMAKE_MODULE_PATH})
+
 # project dependecies
 
 find_package(OpenCV REQUIRED)
 find_package(Boost COMPONENTS filesystem serialization system log log_setup thread date_time REQUIRED)
 find_package(MPI REQUIRED)
 find_package(Threads REQUIRED)
+find_package(Caffe REQUIRED)
+find_package(LMDB REQUIRED)
+find_package(CUDA REQUIRED)
 
 # remove all previously set compiler and linker flags
 set(CMAKE_CXX_FLAGS "")
@@ -84,9 +89,10 @@ include_directories(
 	SYSTEM ${MPI_CXX_INCLUDE_PATH}
 )
 
+add_definitions(-DUSE_DEEPLOCALIZER)
 add_definitions(-DPipelineStandalone)
 #add_definitions(-DDEBUG_SHOW_DECODED_GRID)
 add_definitions(-DBOOST_LOG_DYN_LINK)
 
 add_subdirectory(src)
-add_subdirectory(test)
+#add_subdirectory(test)

@@ -84,8 +84,9 @@ void DecodingProcess::process(std::string const& filename) const {
 	pipeline::GridFitter gridFitter;
 	pipeline::Decoder decoder;
 
-	cv::Mat img = cv::imread(filename);
-	cv::Mat preprocessedImg;
+    cv::Mat img = cv::imread(filename, CV_LOAD_IMAGE_GRAYSCALE);
+
+    cv::Mat preprocessedImg;
 	std::vector<pipeline::Tag> taglist;
 	std::vector<pipeline::Tag> taglist2;
 

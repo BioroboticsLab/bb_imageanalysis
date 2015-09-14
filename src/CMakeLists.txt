@@ -1,28 +1,36 @@
-file(GLOB_RECURSE pipeline-src RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} *.cpp)
-file(GLOB_RECURSE pipeline-hdr RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} *.h)
 file(GLOB src RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} *.cpp)
 file(GLOB hdr RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} *.h)
 
-list(REMOVE_ITEM pipeline-src ${src})
-list(REMOVE_ITEM pipeline-hdr ${hdr})
+file(GLOB src-util RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} utility/*.cpp)
+file(GLOB hdr-util RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} utility/*.h)
 
-add_library(pipeline STATIC
-    ${pipeline-src} ${pipeline-hdr}
+add_definitions(-DUSE_DEEPLOCALIZER)
+
+add_subdirectory(pipeline)
+
+link_directories(${DEEPLOCALIZER_CLASSIFIER_LIBRARY_DIR})
+
+add_executable(bb_imganalysis
+    ${src} ${hdr}
+    ${src-util} ${hdr-util}
 )
 
-target_link_libraries(pipeline
+get_target_property(PIPELINE_INCLUDES Pipeline PIPELINE_INCLUDES)
+
+include_directories(${PIPELINE_INCLUDES})
+
+message(${DEEPLOCALIZER_CLASSIFIER_LIBRARY_DIR})
+
+target_link_libraries(bb_imganalysis
+    "deeplocalizer-classifier"
+    Pipeline
     ${CMAKE_THREAD_LIBS_INIT}
     ${OpenCV_LIBS}
     ${Boost_LIBRARIES}
     ${MPI_CXX_LIBRARIES}
-)
-
-add_executable(bb_imganalysis
-    ${src} ${hdr}
-)
- 
-target_link_libraries(bb_imganalysis
-    pipeline
+    ${Caffe_LIBRARIES}
+    ${LMDB_LIBRARIES}
+    ${CUDA_LIBRARIES}
 )
 
 # add files to source groups to preserve folder structure in visual studio
