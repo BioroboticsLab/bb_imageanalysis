@@ -58,6 +58,17 @@ else()
     )
 endif()
 
+if(NOT DEFINED DEEPLOCALIZER_MODELS_PATH)
+    CPM_AddModule("deeplocalizer_models"
+        GIT_REPOSITORY "git@github.com:BioroboticsLab/deeplocalizer_models.git"
+        GIT_TAG "master"
+    )
+else()
+    CPM_AddModule("deeplocalizer_models"
+        SOURCE_DIR "${DEEPLOCALIZER_MODELS_PATH}"
+    )
+endif()
+
 CPM_InitModule(${CPM_MODULE_NAME})
 
 # project dependecies

@@ -38,8 +38,23 @@ TEST_CASE("Pipeline finishes with test data and returns results", "[integration]
             settings->loadFromJson(configFile.string());
         }
 
-        // TODO: don't test deeplocalizer for now
-        localizer_settings.setValue(pipeline::settings::Localizer::Params::DEEPLOCALIZER_FILTER, false);
+#ifdef USE_DEEPLOCALIZER
+        static const boost::filesystem::path deeplocalizer_model_path(BOOST_PP_STRINGIZE(MODEL_PATH));
+
+        boost::filesystem::path model_path(localizer_settings.get_deeplocalizer_model_file());
+        model_path = deeplocalizer_model_path / model_path.filename();
+
+        boost::filesystem::path param_path(localizer_settings.get_deeplocalizer_param_file());
+        param_path = deeplocalizer_model_path / param_path.filename();
+
+        localizer_settings.setValue(pipeline::settings::Localizer::Params::DEEPLOCALIZER_MODEL_FILE,
+                                    model_path.string());
+        localizer_settings.setValue(pipeline::settings::Localizer::Params::DEEPLOCALIZER_PARAM_FILE,
+                                    param_path.string());
+
+        REQUIRE(boost::filesystem::is_regular_file(model_path));
+        REQUIRE(boost::filesystem::is_regular_file(param_path));
+#endif
 
         preprocessor.loadSettings(preprocessor_settings);
         localizer.loadSettings(localizer_settings);
