@@ -42,6 +42,12 @@ endif()
 
 set(USE_DEEPLOCALIZER "1")
 
+OPTION(USE_CRAY "Cray compile for execution on cray" OFF)
+
+IF(USE_CRAY)
+    ADD_DEFINITIONS(-DCRAY)
+ENDIF(USE_CRAY)
+
 add_definitions(-DUSE_DEEPLOCALIZER)
 add_definitions(-DPipelineStandalone)
 #add_definitions(-DDEBUG_SHOW_DECODED_GRID)
