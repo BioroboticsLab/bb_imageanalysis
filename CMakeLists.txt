@@ -13,7 +13,7 @@ project(BB_ImgAnalysis)
 #-----------------------------------------------------------------------
 # CPM configuration
 #-----------------------------------------------------------------------
-set(CPM_MODULE_NAME BB_ImgAnalysis)
+set(CPM_MODULE_NAME bb_imganalysis)
 
 set(CPM_BIN_TARGET_NAME ${CPM_MODULE_NAME})
 
