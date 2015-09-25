@@ -19,7 +19,9 @@ public:
 	 *         xRotation    : rotation of the grid in x plane
 	 *         yRotation    : rotation of the grid in y plane
 	 *         zRotation    : rotation of the grid in z plane
-	 *         vote         : candidate score
+     *         lScore       : roi score (Localizer)
+     *         eScore       : ellipse score (EllipseFitter)
+     *         gScore       : grid score (GridFitter)
 	 *         id           : decoded id
 	 *
 	 * there may be several (possible duplicated) decoded IDs
