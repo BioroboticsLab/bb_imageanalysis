@@ -261,7 +261,7 @@ void listImagesDebug(const char *directoryName,	vector<std::string> &imageFiles)
 }
 
 int main(int argc, char** argv) {
-#ifndef MODEL_PATH
+#ifndef MODEL_BASE_PATH
     static_assert(false, "Path to deeplocalizer model not defined!");
 #endif
     // enable core dumps on crash
