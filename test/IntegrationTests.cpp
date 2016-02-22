@@ -13,6 +13,8 @@
 
 #include <pipeline/settings/Settings.h>
 
+#include "bb_imganalysis/utility/util.h"
+
 TEST_CASE("Pipeline finishes with test data and returns results", "[integration]") {
 	pipeline::Preprocessor preprocessor;
 	pipeline::Localizer localizer;
@@ -23,46 +25,12 @@ TEST_CASE("Pipeline finishes with test data and returns results", "[integration]
     boost::filesystem::path basePath(TEST_DATA_PATH);
     boost::filesystem::path configFile = basePath / "settings.json";
 
-    if (boost::filesystem::is_regular_file(configFile)) {
-        pipeline::settings::preprocessor_settings_t preprocessor_settings;
-        pipeline::settings::localizer_settings_t localizer_settings;
-        pipeline::settings::ellipsefitter_settings_t ellipsefitter_settings;
-        pipeline::settings::gridfitter_settings_t gridfitter_settings;
-
-        for (pipeline::settings::settings_abs* settings :
-             std::array<pipeline::settings::settings_abs*, 4>({&preprocessor_settings,
-                                                               &localizer_settings,
-                                                               &ellipsefitter_settings,
-                                                               &gridfitter_settings}))
-        {
-            settings->loadFromJson(configFile.string());
-        }
-
-#ifdef USE_DEEPLOCALIZER
-        static const boost::filesystem::path deeplocalizer_model_path(BOOST_PP_STRINGIZE(MODEL_PATH));
-
-        boost::filesystem::path model_path(localizer_settings.get_deeplocalizer_model_file());
-        model_path = deeplocalizer_model_path / model_path.filename();
-
-        boost::filesystem::path param_path(localizer_settings.get_deeplocalizer_param_file());
-        param_path = deeplocalizer_model_path / param_path.filename();
-
-        localizer_settings.setValue(pipeline::settings::Localizer::Params::DEEPLOCALIZER_MODEL_FILE,
-                                    model_path.string());
-        localizer_settings.setValue(pipeline::settings::Localizer::Params::DEEPLOCALIZER_PARAM_FILE,
-                                    param_path.string());
-
-        REQUIRE(boost::filesystem::is_regular_file(model_path));
-        REQUIRE(boost::filesystem::is_regular_file(param_path));
-#endif
-
-        preprocessor.loadSettings(preprocessor_settings);
-        localizer.loadSettings(localizer_settings);
-        ellipseFitter.loadSettings(ellipsefitter_settings);
-        gridFitter.loadSettings(gridfitter_settings);
-    } else {
-        REQUIRE(false);
-    }
+    util::loadSettingsFile(preprocessor,
+                           localizer,
+                           ellipseFitter,
+                           gridFitter,
+                           decoder,
+                           configFile);
 
     for (boost::filesystem::recursive_directory_iterator end, dir(basePath); dir != end; ++dir ) {
 		if (boost::filesystem::is_regular_file(*dir)) {

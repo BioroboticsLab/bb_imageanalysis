@@ -3,6 +3,16 @@
 #include <cstdint>
 #include <vector>
 
+#include <boost/filesystem.hpp>
+
+namespace pipeline {
+class Preprocessor;
+class Localizer;
+class EllipseFitter;
+class GridFitter;
+class Decoder;
+}
+
 namespace util {
 // branchless, type-safe signum
 // see: http://stackoverflow.com/a/4609795
@@ -18,4 +28,12 @@ std::vector<T> linspace(T first, T last, size_t len) {
 	for (size_t i=0; i<len; i++) { result[i] = first + static_cast<T>(i) * step; }
     return result;
 }
+
+void loadSettingsFile(pipeline::Preprocessor& preprocessor,
+                      pipeline::Localizer& localizer,
+                      pipeline::EllipseFitter& ellipseFitter,
+                      pipeline::GridFitter& gridFitter,
+                      pipeline::Decoder& decoder,
+                      boost::filesystem::path const& configFile);
+
 }

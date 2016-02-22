@@ -19,8 +19,8 @@
     "LOCALIZER": {
         "BINARY_THRESHOLD": "10",
         "DEEPLOCALIZER_FILTER": "1",
-        "DEEPLOCALIZER_MODEL_FILE": "\/home\/ben\/dev\/deeplocalizer-data\/from_aws\/models\/conv12_conv48_fc1024_fc_2\/deploy.prototxt",
-        "DEEPLOCALIZER_PARAM_FILE": "\/home\/ben\/dev\/deeplocalizer-data\/from_aws\/models\/conv12_conv48_fc1024_fc_2\/model_iter_20000.caffemodel",
+        "DEEPLOCALIZER_MODEL_FILE": "models\/season2015_mxnet_vgg_100x100\/filternet-symbol.json",
+        "DEEPLOCALIZER_PARAM_FILE": "models\/season2015_mxnet_vgg_100x100\/filternet-0003.params",
         "DEEPLOCALIZER_PROBABILITY_THRESHOLD": "0.517749",
         "EROSION_SIZE": "24",
         "FIRST_DILATION_NUM_ITERATIONS": "4",
