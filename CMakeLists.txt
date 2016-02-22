@@ -51,7 +51,7 @@ else()
     )
 endif()
 
-include_pipeline()
+include_pipeline(use-mxnet)
 include_deeplocalizer_models()
 
 CPM_InitModule(${CPM_MODULE_NAME})
