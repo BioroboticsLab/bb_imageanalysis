@@ -118,7 +118,7 @@ DecodingProcess::DecodingProcess(const std::string &settingsPath)
 void DecodingProcess::process(std::string const& filename) {
     cv::Mat img = cv::imread(filename, CV_LOAD_IMAGE_GRAYSCALE);
 
-    cv::Mat preprocessedImg;
+    pipeline::PreprocessorResult preprocessed;
     std::vector<pipeline::Tag> taglist;
 
 #ifdef DEBUG_PROGRAM
@@ -129,7 +129,7 @@ void DecodingProcess::process(std::string const& filename) {
     {
         try {
             MeasureTimeRAII measure("Preprocessor");
-            preprocessedImg = _preprocessor.process(img);
+            preprocessed= _preprocessor.process(img);
 
         } catch (const std::exception & e) {
             ss << "Error on Preprocessor: " << e.what() << " stop processing.";
@@ -141,7 +141,7 @@ void DecodingProcess::process(std::string const& filename) {
     {
         try {
             MeasureTimeRAII measure("Localizer");
-            taglist = _localizer.process(std::move(img), std::move(preprocessedImg));
+            taglist = _localizer.process(std::move(preprocessed));
 
 #ifdef DEBUG_PROGRAM
             // shorten result for faster debugging

@@ -38,12 +38,13 @@ TEST_CASE("Pipeline finishes with test data and returns results", "[integration]
 				INFO(*dir);
 
                 cv::Mat img = cv::imread((*dir).path().string(), CV_LOAD_IMAGE_GRAYSCALE);
-				cv::Mat preprocessedImg;
 				std::vector<pipeline::Tag> taglist;
-				preprocessedImg = preprocessor.process(img);
-				REQUIRE(!preprocessedImg.empty());
+                pipeline::PreprocessorResult preprocessed = preprocessor.process(img);
+                REQUIRE(!preprocessed.originalImage.empty());
+                REQUIRE(!preprocessed.preprocessedImage.empty());
+                REQUIRE(!preprocessed.claheImage.empty());
 
-				taglist = localizer.process(std::move(img), std::move(preprocessedImg));
+                taglist = localizer.process(std::move(preprocessed));
 				REQUIRE(!taglist.empty());
 
 				taglist = ellipseFitter.process(std::move(taglist));
