@@ -20,7 +20,7 @@ void util::loadSettingsFile(pipeline::Preprocessor& preprocessor,
                             pipeline::Localizer &localizer,
                             pipeline::EllipseFitter &ellipseFitter,
                             pipeline::GridFitter &gridFitter,
-                            pipeline::Decoder &decoder,
+                            pipeline::Decoder &,
                             const boost::filesystem::path &configFile)
 {
     checkPath(configFile);

@@ -79,7 +79,7 @@ std::vector<pipeline::Tag> Export::readSerializedObjects(const std::string &path
 
     std::vector<pipeline::Tag> taglist;
     // TODO FIXME!
-    //ia & BOOST_SERIALIZATION_NVP(taglist);
+    ia & BOOST_SERIALIZATION_NVP(taglist);
 
     return taglist;
 }
