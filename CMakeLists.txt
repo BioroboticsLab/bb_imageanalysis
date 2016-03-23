@@ -61,14 +61,12 @@ biorobotics_set_compiler_flags()
 # project dependecies
 find_package(Boost COMPONENTS filesystem serialization system log log_setup thread date_time REQUIRED)
 find_package(OpenCV REQUIRED)
-find_package(MPI REQUIRED)
 
 # include external dependecies as SYSTEM headers to prevent warnings from
 # external files. unfortunately, this has no effect when using MSVC.
 include_directories(
     ${PROJECT_SOURCE_DIR}
     SYSTEM ${Boost_INCLUDE_DIR}
-    SYSTEM ${MPI_CXX_INCLUDE_PATH}
 )
 
 add_definitions(-DPipelineStandalone)

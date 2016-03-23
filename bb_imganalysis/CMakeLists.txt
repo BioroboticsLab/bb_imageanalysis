@@ -14,7 +14,7 @@ add_executable(${CPM_BIN_TARGET_NAME}
 target_link_libraries(${CPM_BIN_TARGET_NAME}
     ${CMAKE_THREAD_LIBS_INIT}
     ${Boost_LIBRARIES}
-    ${MPI_CXX_LIBRARIES}
+    ${OpenCV_LIBS}
     ${CPM_LIBRARIES}
 )
 

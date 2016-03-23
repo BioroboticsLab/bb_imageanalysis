@@ -10,5 +10,8 @@ add_executable(run-tests
 )
  
 target_link_libraries(run-tests
+    ${CMAKE_THREAD_LIBS_INIT}
+    ${OpenCV_LIBS}
+    ${Boost_LIBRARIES}
     ${CPM_LIBRARIES}
 )

@@ -10,6 +10,11 @@
 #include <dirent.h>
 #include <sys/resource.h>
 
+/* MPI macros cause old-style-cast warnings. Therefore, if compiling with MPI,
+ * we have to disable this specific warning for this compilation unit. */
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wold-style-cast"
+
 #include <mpi.h>
 
 #include <boost/filesystem.hpp>
@@ -21,13 +26,6 @@
 #include "utility/Export.h"
 
 //#define DEBUG_PROGRAM
-
-/* MPI macros cause old-style-cast warnings. Therefore, if compiling with MPI,
- * we have to disable this specific warning for this compilation unit. */
-#if defined(CRAY) && (defined(__GNUC__) || defined(__clang__))
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wold-style-cast"
-#endif
 
 using namespace boost::filesystem;
 using namespace std;
