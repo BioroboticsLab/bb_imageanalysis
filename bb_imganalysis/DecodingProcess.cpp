@@ -24,6 +24,7 @@
 
 #include "utility/Logger.h"
 #include "utility/Export.h"
+#include "utility/util.h"
 
 //#define DEBUG_PROGRAM
 
@@ -78,39 +79,18 @@ void DecodingProcess::loadMetaInfos(const std::string &filename) {
 
 DecodingProcess::DecodingProcess(const std::string &settingsPath)
 {
-    pipeline::settings::preprocessor_settings_t preprocessor_settings;
-    pipeline::settings::localizer_settings_t localizer_settings;
-    pipeline::settings::ellipsefitter_settings_t ellipsefitter_settings;
-    pipeline::settings::gridfitter_settings_t gridfitter_settings;
+    pipeline::Preprocessor preprocessor;
+    pipeline::Localizer localizer;
+    pipeline::EllipseFitter ellipseFitter;
+    pipeline::GridFitter gridFitter;
+    pipeline::Decoder decoder;
 
-    for (pipeline::settings::settings_abs* settings :
-         std::array<pipeline::settings::settings_abs*, 4>({&preprocessor_settings,
-                                                          &localizer_settings,
-                                                          &ellipsefitter_settings,
-                                                          &gridfitter_settings}))
-    {
-        settings->loadFromJson(settingsPath);
-    }
-
-#ifdef USE_DEEPLOCALIZER
-    static const boost::filesystem::path deeplocalizer_model_path(BOOST_PP_STRINGIZE(MODEL_BASE_PATH));
-
-    boost::filesystem::path model_path(localizer_settings.get_deeplocalizer_model_file());
-    model_path = deeplocalizer_model_path / model_path.parent_path().leaf() / model_path.filename();
-
-    boost::filesystem::path param_path(localizer_settings.get_deeplocalizer_param_file());
-    param_path = deeplocalizer_model_path / model_path.parent_path().leaf() / param_path.filename();
-
-    localizer_settings.setValue(pipeline::settings::Localizer::Params::DEEPLOCALIZER_MODEL_FILE,
-                                model_path.string());
-    localizer_settings.setValue(pipeline::settings::Localizer::Params::DEEPLOCALIZER_PARAM_FILE,
-                                param_path.string());
-#endif
-
-    _preprocessor.loadSettings(preprocessor_settings);
-    _localizer.loadSettings(localizer_settings);
-    _ellipseFitter.loadSettings(ellipsefitter_settings);
-    _gridFitter.loadSettings(gridfitter_settings);
+    util::loadSettingsFile(_preprocessor,
+                           _localizer,
+                           _ellipseFitter,
+                           _gridFitter,
+                           _decoder,
+                           settingsPath);
 }
 
 void DecodingProcess::process(std::string const& filename) {
