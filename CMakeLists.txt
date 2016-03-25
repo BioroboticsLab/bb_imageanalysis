@@ -69,6 +69,12 @@ include_directories(
     SYSTEM ${Boost_INCLUDE_DIR}
 )
 
+OPTION(USE_CRAY "Cray compile for execution on cray" OFF)
+
+IF(USE_CRAY)
+    ADD_DEFINITIONS(-DCRAY)
+ENDIF(USE_CRAY)
+
 add_definitions(-DPipelineStandalone)
 #add_definitions(-DDEBUG_SHOW_DECODED_GRID)
 add_definitions(-DBOOST_LOG_DYN_LINK)
