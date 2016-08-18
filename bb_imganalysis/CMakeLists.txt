@@ -15,6 +15,7 @@ target_link_libraries(${CPM_BIN_TARGET_NAME}
     ${CMAKE_THREAD_LIBS_INIT}
     ${Boost_LIBRARIES}
     ${OpenCV_LIBS}
+    ${MPI_CXX_LIBRARIES}
     ${CPM_LIBRARIES}
 )
 
